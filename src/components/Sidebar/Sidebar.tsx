@@ -3,7 +3,7 @@ import { formatTimestamp } from '../../utils/formatTimestamp';
 import clsx from 'clsx';
 import { Logo } from '../ui/Logo';
 
-export const Sidebar = ({ isMobile = false }: { isMobile?: boolean }) => {
+export const Sidebar = ({ isMobile = false, onClose }: { isMobile?: boolean; onClose?: () => void }) => {
   const { notes, activeNoteId, isSidebarOpen, setActiveNote, deleteNote } = useNotesStore();
 
   const handleDelete = (e: React.MouseEvent, noteId: string) => {
@@ -18,7 +18,7 @@ export const Sidebar = ({ isMobile = false }: { isMobile?: boolean }) => {
     return (
       <div className={clsx(
         "bg-white dark:bg-stone-900 border-r border-stone-200 dark:border-stone-800 p-8 flex flex-col items-center justify-center self-stretch",
-        isMobile ? "w-full h-full" : "hidden md:flex transition-[width] duration-300 ease-in-out",
+        isMobile ? "w-full h-full justify-center" : "hidden md:flex transition-[width] duration-300 ease-in-out",
         !isMobile && (isOpen ? "w-80" : "w-0 hidden")
       )}>
         <div className="text-center">
@@ -37,6 +37,23 @@ export const Sidebar = ({ isMobile = false }: { isMobile?: boolean }) => {
       !isMobile && (isOpen ? "w-80" : "w-0 opacity-0")
     )}>
       <div className="pt-4 px-4 pb-8">
+        {isMobile && (
+          <div className="flex items-center justify-between mb-6 pl-2 pr-1">
+            <div className="flex items-center gap-3">
+              <Logo className="w-6 h-6 text-stone-900 dark:text-stone-100" />
+              <span className="font-semibold text-lg text-stone-900 dark:text-stone-100 tracking-tight">Sandbooks</span>
+            </div>
+            <button
+              onClick={onClose}
+              className="p-2 -mr-2 text-stone-500 dark:text-stone-400 hover:bg-stone-100 dark:hover:bg-stone-800 rounded-lg transition-colors"
+              aria-label="Close sidebar"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        )}
         {notes.map((note) => {
           const timestamp = formatTimestamp(note.updatedAt);
 
@@ -44,10 +61,10 @@ export const Sidebar = ({ isMobile = false }: { isMobile?: boolean }) => {
             <div
               key={note.id}
               className={clsx(
-                'px-3 md:px-4 py-3 md:py-3.5 mb-1 mx-2 rounded-lg transition-all duration-200 ease-out group relative',
+                'px-3 md:px-4 py-3.5 md:py-3.5 mb-1 mx-2 rounded-lg transition-all duration-200 ease-out group relative touch-manipulation',
                 activeNoteId === note.id
                   ? 'bg-white dark:bg-stone-800 shadow-sm ring-1 ring-stone-200 dark:ring-stone-700 z-10 text-stone-900 dark:text-stone-100'
-                  : 'hover:bg-stone-100 dark:hover:bg-stone-800/40 text-stone-600 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-200'
+                  : 'hover:bg-stone-100 dark:hover:bg-stone-800/40 text-stone-600 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-200 active:bg-stone-100 dark:active:bg-stone-800/60'
               )}
             >
               {/* Active Indicator */}
@@ -106,7 +123,7 @@ export const Sidebar = ({ isMobile = false }: { isMobile?: boolean }) => {
                 </button>
                 <button
                   onClick={(e) => handleDelete(e, note.id)}
-                  className="opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 text-stone-400 dark:text-stone-500 hover:text-red-600 dark:hover:text-red-400 transition-[opacity,color,background-color,transform] duration-200 flex-shrink-0 p-2 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-red-600 focus-visible:ring-offset-3 focus-visible:opacity-100 active:scale-[0.95]"
+                  className="opacity-100 md:opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 text-stone-400 dark:text-stone-500 hover:text-red-600 dark:hover:text-red-400 transition-[opacity,color,background-color,transform] duration-200 flex-shrink-0 p-3 md:p-2 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-red-600 focus-visible:ring-offset-3 focus-visible:opacity-100 active:scale-[0.95]"
                   title="Delete note"
                   aria-label={`Delete note: ${note.title}`}
                 >

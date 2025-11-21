@@ -123,9 +123,9 @@ function App() {
       if (e.key === 'Escape') {
         const target = document.activeElement as HTMLElement;
         if (target &&
-            (['INPUT', 'TEXTAREA'].includes(target.tagName) ||
-             target.contentEditable === 'true' ||
-             target.classList.contains('ProseMirror'))) {
+          (['INPUT', 'TEXTAREA'].includes(target.tagName) ||
+            target.contentEditable === 'true' ||
+            target.classList.contains('ProseMirror'))) {
           target.blur();
         }
       }
@@ -140,8 +140,8 @@ function App() {
     const handleKeyDown = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement;
       const isTyping = ['INPUT', 'TEXTAREA'].includes(target.tagName) ||
-                       target.contentEditable === 'true' ||
-                       target.classList.contains('ProseMirror');
+        target.contentEditable === 'true' ||
+        target.classList.contains('ProseMirror');
 
       // Context-sensitive shortcuts (only when NOT typing in editor)
       if (!isTyping) {
@@ -227,10 +227,10 @@ function App() {
 
         {/* Mobile sidebar overlay */}
         {isMobileSidebarOpen && (
-          <div className="fixed inset-0 z-40 md:hidden">
-            {/* Backdrop - solid color without backdrop-filter for mobile compatibility */}
+          <div className="fixed inset-0 z-[60] md:hidden">
+            {/* Backdrop - glassmorphism for premium feel */}
             <div
-              className="absolute inset-0 bg-black/60 transition-opacity duration-200 ease-out"
+              className="absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity duration-300 ease-out animate-fadeIn"
               onClick={closeMobileSidebar}
               role="button"
               aria-label="Close sidebar"
@@ -242,9 +242,9 @@ function App() {
                 }
               }}
             />
-            {/* Sidebar - full height with proper stacking */}
-            <div className="absolute left-0 top-0 bottom-0 w-full max-w-[85vw] sm:w-80 sm:max-w-none z-50 bg-white dark:bg-stone-900 shadow-2xl transition-transform duration-300 ease-out">
-              <Sidebar isMobile={true} />
+            {/* Sidebar - full height with proper stacking and spring animation */}
+            <div className="absolute left-0 top-0 bottom-0 w-full max-w-[85vw] sm:w-80 sm:max-w-none z-50 bg-white dark:bg-stone-900 shadow-2xl animate-slideInLeft">
+              <Sidebar isMobile={true} onClose={closeMobileSidebar} />
             </div>
           </div>
         )}

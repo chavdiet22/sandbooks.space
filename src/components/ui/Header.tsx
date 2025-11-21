@@ -56,12 +56,12 @@ export const Header = ({ onToggleMobileSidebar }: HeaderProps) => {
   };
 
   return (
-    <header className="sticky top-0 z-50 bg-white dark:bg-stone-900 border-b border-stone-200 dark:border-stone-800 px-3 md:px-6 lg:px-8 py-3 md:py-4 lg:py-6 flex items-center justify-between shadow-elevation-1" style={{ paddingTop: 'max(0.75rem, env(safe-area-inset-top))' }}>
+    <header className="sticky top-0 z-50 bg-white dark:bg-stone-900 border-b border-stone-200 dark:border-stone-800 px-4 md:px-6 lg:px-8 py-3 md:py-4 lg:py-6 flex items-center justify-between shadow-elevation-1 transition-all duration-200" style={{ paddingTop: 'max(0.75rem, env(safe-area-inset-top))' }}>
       <div className="flex items-center gap-4 md:gap-6">
         {/* Mobile hamburger menu */}
         <button
           onClick={onToggleMobileSidebar}
-          className="md:hidden p-2.5 hover:bg-stone-100 dark:hover:bg-stone-800 rounded-lg transition-all duration-200 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-blue-600 focus-visible:ring-offset-3 active:scale-[0.98]"
+          className="md:hidden p-2 -ml-2 hover:bg-stone-100 dark:hover:bg-stone-800 rounded-lg transition-all duration-200 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-blue-600 focus-visible:ring-offset-3 active:scale-[0.98] touch-manipulation"
           title="Toggle sidebar"
           aria-label="Toggle sidebar"
         >
@@ -127,10 +127,9 @@ export const Header = ({ onToggleMobileSidebar }: HeaderProps) => {
         </button>
         <button
           onClick={toggleCloudExecution}
-          disabled={isCreatingSandbox}
           className={clsx(
             "flex p-1.5 md:p-2 lg:p-2.5 hover:bg-stone-100 dark:hover:bg-stone-800 rounded-lg transition-all duration-200 relative group focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-blue-600 focus-visible:ring-offset-3 active:scale-[0.98]",
-            isCreatingSandbox && "opacity-50 cursor-not-allowed"
+            isCreatingSandbox && "opacity-80"
           )}
           title={
             isCreatingSandbox
@@ -141,7 +140,7 @@ export const Header = ({ onToggleMobileSidebar }: HeaderProps) => {
           }
           aria-label={
             isCreatingSandbox
-              ? "Creating sandbox"
+              ? "Cancel sandbox creation"
               : cloudExecutionEnabled
                 ? "Disable cloud execution"
                 : "Enable cloud execution"

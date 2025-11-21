@@ -190,18 +190,18 @@ ul[data-type="taskList"] li[data-checked="true"]>div {
 /* Mobile-optimized blur (reduced for battery life) */
 @media (max-width: 767px) {
   :root {
-    --blur-modal: 10px;
+    --blur-modal: 12px;
     --blur-backdrop: 8px;
-    --blur-card: 6px;
+    --blur-card: 8px;
   }
 }
 
 /* Low-end device optimization */
 @media (prefers-reduced-data: reduce) {
   :root {
-    --blur-modal: 5px;
-    --blur-backdrop: 4px;
-    --blur-card: 3px;
+    --blur-modal: 0px;
+    --blur-backdrop: 0px;
+    --blur-card: 0px;
   }
 }
 

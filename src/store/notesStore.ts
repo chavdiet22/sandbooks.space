@@ -218,6 +218,7 @@ export const useNotesStore = create<NotesStore>((set, get) => ({
       set({
         sandboxStatus: 'unknown',
         sandboxId: null,
+        isCreatingSandbox: false,
       });
     }
   },

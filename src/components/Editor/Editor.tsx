@@ -101,7 +101,7 @@ export const Editor = ({ note, onUpdate }: EditorProps) => {
     },
     editorProps: {
       attributes: {
-        class: 'prose prose-stone max-w-none focus:outline-none min-h-full px-8 md:px-12 py-8 md:py-12',
+        class: 'prose prose-stone max-w-none focus:outline-none min-h-full px-4 md:px-12 py-6 md:py-12',
       },
     },
   });
@@ -377,9 +377,9 @@ export const Editor = ({ note, onUpdate }: EditorProps) => {
         />
       )}
 
-      {/* Toolbar - fixed height, clean border */}
-      <div className="flex-shrink-0 border-b border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 px-4 py-3 z-10">
-        <div className="max-w-4xl mx-auto w-full flex items-center gap-1 flex-wrap">
+      {/* Toolbar - fixed height, clean border, scrollable on mobile if needed */}
+      <div className="flex-shrink-0 border-b border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 px-4 py-3 z-10 overflow-x-auto no-scrollbar">
+        <div className="max-w-4xl mx-auto w-full flex items-center gap-1 flex-nowrap md:flex-wrap min-w-max md:min-w-0">
           {/* Text Formatting Group */}
           <div className="flex items-center gap-0.5 bg-stone-100 dark:bg-stone-800/50 p-1 rounded-lg">
             <button

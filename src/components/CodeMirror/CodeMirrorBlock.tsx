@@ -1,21 +1,21 @@
 /**
- * CodeMirrorBlock Component
+ * CodeMirrorBlock Component - VS Code Style
  *
- * Standalone code editor using @uiw/react-codemirror
- * Completely separate from TipTap - no integration complexity
+ * Embedded IDE experience using @uiw/react-codemirror
+ * Mimics VS Code's visual design with tab bar, editor, and integrated terminal
  *
  * Features:
- * - Line numbers
- * - Real-time syntax highlighting
- * - Bracket matching and auto-closing
- * - Cloud execution via Hopx
- * - Modern, minimal UI
+ * - Tab bar header (VS Code style)
+ * - Dark+ theme approximation
+ * - Integrated terminal output
+ * - Status bar with execution info
  *
- * Date: 2025-11-20
+ * Date: 2025-11-21
  */
 
 import { useState } from 'react';
 import CodeMirror from '@uiw/react-codemirror';
+import { vscodeDark } from '@uiw/codemirror-theme-vscode';
 import { python } from '@codemirror/lang-python';
 import { javascript } from '@codemirror/lang-javascript';
 import { StreamLanguage } from '@codemirror/language';
@@ -26,7 +26,6 @@ import type { Language, CodeBlock as CodeBlockType } from '../../types';
 import { LanguageIcon } from '../Editor/LanguageIcon';
 import clsx from 'clsx';
 import toast from 'react-hot-toast';
-import { VscClearAll } from 'react-icons/vsc';
 
 interface CodeMirrorBlockProps {
   noteId: string;
@@ -38,7 +37,6 @@ export const CodeMirrorBlock = ({ noteId, block }: CodeMirrorBlockProps) => {
     updateCodeBlock,
     deleteCodeBlock,
     executeCodeBlock,
-    darkModeEnabled,
     cloudExecutionEnabled
   } = useNotesStore();
 
@@ -86,14 +84,10 @@ export const CodeMirrorBlock = ({ noteId, block }: CodeMirrorBlockProps) => {
 
     setIsExecuting(true);
 
-    // Silent execution - backend handles retries automatically
-    // No loading toast - just show spinner in button
     try {
       await executeCodeBlock(noteId, block.id);
-      // Success is silent - output appears below (minimal UX)
     } catch {
-      // Only show error if backend exhausted all retries
-      // Error will be displayed in output section (no toast)
+      // Error will be displayed in output section
     } finally {
       setIsExecuting(false);
     }
@@ -111,52 +105,61 @@ export const CodeMirrorBlock = ({ noteId, block }: CodeMirrorBlockProps) => {
 
   return (
     <div className="code-mirror-block not-prose my-8 max-w-4xl mx-auto">
-      <div className="border-2 border-stone-300 dark:border-stone-700 rounded-xl overflow-hidden bg-white dark:bg-stone-800 transition-transform duration-300 hover:scale-[1.01] hover:-translate-y-1 shadow-code-block">
-        {/* Header */}
-        <div className="flex items-center justify-between px-4 py-2.5 bg-gradient-to-br from-stone-700 via-stone-800 to-stone-900 dark:from-stone-800 dark:via-stone-900 dark:to-black border-b border-stone-600/40 dark:border-stone-700/50">
-          {/* Language Selector */}
-          <div className="relative">
-            <div className="flex items-center gap-2">
-              <LanguageIcon language={block.language} size={20} className="text-emerald-400 flex-shrink-0" />
+      <div className="rounded-md overflow-hidden shadow-2xl border border-[#3c3c3c] overflow-x-auto" style={{ backgroundColor: '#1e1e1e' }}>
+        {/* Tab Bar Header (VS Code style) */}
+        <div className="flex items-center justify-between h-9 border-b border-[#2d2d2d]" style={{ backgroundColor: '#252526' }}>
+          {/* Tab */}
+          <div className="flex items-center h-full">
+            <div
+              className="flex items-center gap-2 h-full px-4 border-r border-[#2d2d2d] relative"
+              style={{ backgroundColor: '#1e1e1e' }}
+            >
+              {/* Active tab indicator */}
+              <div className="absolute top-0 left-0 right-0 h-[1px]" style={{ backgroundColor: '#007acc' }}></div>
+
+              <LanguageIcon language={block.language} size={16} className="text-[#4ec9b0] flex-shrink-0" />
               <select
                 value={block.language}
                 onChange={handleLanguageChange}
-                className="appearance-none bg-transparent text-stone-100 text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded pr-6 py-1 cursor-pointer hover:text-emerald-400 transition-colors duration-200"
+                className="appearance-none bg-transparent text-[#cccccc] text-xs font-normal focus:outline-none pr-4 cursor-pointer hover:text-white transition-colors"
                 aria-label="Select programming language"
                 title={`Language: ${block.language}`}
+                style={{ fontFamily: '"Segoe UI", -apple-system, BlinkMacSystemFont, sans-serif' }}
               >
-                <option value="python" className="bg-stone-800 text-stone-100">python</option>
-                <option value="javascript" className="bg-stone-800 text-stone-100">javascript</option>
-                <option value="typescript" className="bg-stone-800 text-stone-100">typescript</option>
-                <option value="bash" className="bg-stone-800 text-stone-100">bash</option>
-                <option value="go" className="bg-stone-800 text-stone-100">go</option>
+                <option value="python" className="bg-[#252526] text-[#cccccc]">Python</option>
+                <option value="javascript" className="bg-[#252526] text-[#cccccc]">JavaScript</option>
+                <option value="typescript" className="bg-[#252526] text-[#cccccc]">TypeScript</option>
+                <option value="bash" className="bg-[#252526] text-[#cccccc]">Bash</option>
+                <option value="go" className="bg-[#252526] text-[#cccccc]">Go</option>
               </select>
-              <svg className="w-3 h-3 text-stone-400 absolute right-0 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-2.5 h-2.5 text-[#858585] absolute right-2 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
               </svg>
             </div>
           </div>
 
-          {/* Action Buttons */}
-          <div className="flex items-center gap-1.5">
+          {/* Window Controls */}
+          <div className="flex items-center gap-1 h-full pr-2">
             {block.output && cloudExecutionEnabled && (
               <button
                 onClick={handleClearOutput}
-                className="p-2 bg-stone-600/50 hover:bg-stone-500 text-stone-100 rounded-lg transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-stone-400 active:scale-[0.95]"
+                className="p-1.5 hover:bg-[#2a2d2e] rounded text-[#858585] hover:text-[#cccccc] transition-colors"
                 aria-label="Clear output"
                 title="Clear output"
               >
-                <VscClearAll size={18} aria-hidden="true" />
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
               </button>
             )}
 
             <button
               onClick={handleDelete}
-              className="p-2 bg-red-600/50 hover:bg-red-600 text-white rounded-lg transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400 active:scale-[0.95]"
+              className="p-1.5 hover:bg-[#2a2d2e] rounded text-[#858585] hover:text-[#cccccc] transition-colors"
               aria-label="Delete code block"
               title="Delete code block"
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
               </svg>
             </button>
@@ -166,21 +169,21 @@ export const CodeMirrorBlock = ({ noteId, block }: CodeMirrorBlockProps) => {
                 onClick={handleExecute}
                 disabled={isExecuting}
                 className={clsx(
-                  'p-2.5 rounded-lg transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 active:scale-[0.95]',
+                  'ml-1 p-1.5 rounded transition-colors',
                   isExecuting
-                    ? 'bg-stone-600/50 cursor-not-allowed text-stone-400 animate-pulseGlow'
-                    : 'bg-emerald-600 hover:bg-emerald-700 text-white focus-visible:ring-emerald-400 focus-visible:ring-offset-stone-800 shadow-emerald-500/30 shadow-lg hover:shadow-emerald-500/50 hover:shadow-xl'
+                    ? 'cursor-not-allowed text-[#858585]'
+                    : 'hover:bg-[#0e639c] text-[#cccccc] hover:text-white'
                 )}
+                style={{ backgroundColor: isExecuting ? '#2a2d2e' : '#007acc' }}
                 aria-label={isExecuting ? 'Code is executing' : 'Run code'}
                 aria-busy={isExecuting}
                 title={isExecuting ? 'Running...' : 'Run code'}
               >
                 {isExecuting ? (
-                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  <div className="w-3.5 h-3.5 border-2 border-[#858585] border-t-transparent rounded-full animate-spin" />
                 ) : (
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M8 5v14l11-7z" />
                   </svg>
                 )}
               </button>
@@ -189,50 +192,56 @@ export const CodeMirrorBlock = ({ noteId, block }: CodeMirrorBlockProps) => {
         </div>
 
         {/* CodeMirror Editor */}
-        <CodeMirror
-          value={block.code}
-          height="auto"
-          minHeight="120px"
-          maxHeight="600px"
-          theme={darkModeEnabled ? 'dark' : 'light'}
-          extensions={getExtensions(block.language)}
-          onChange={handleCodeChange}
-          basicSetup={{
-            lineNumbers: true,
-            highlightActiveLineGutter: true,
-            highlightActiveLine: true,
-            foldGutter: false,
-            dropCursor: true,
-            allowMultipleSelections: true,
-            indentOnInput: true,
-            syntaxHighlighting: true,
-            bracketMatching: true,
-            closeBrackets: true,
-            autocompletion: true,
-            rectangularSelection: true,
-            crosshairCursor: false,
-            highlightSelectionMatches: true,
-          }}
-          style={{
-            fontSize: '14px',
-            lineHeight: '1.625',
-            fontFamily: '"JetBrains Mono", "SF Mono", "Menlo", "Monaco", "Consolas", monospace',
-          }}
-        />
+        <div style={{ backgroundColor: '#1e1e1e' }}>
+          <CodeMirror
+            value={block.code}
+            height="auto"
+            minHeight="120px"
+            maxHeight="600px"
+            theme={vscodeDark}
+            extensions={getExtensions(block.language)}
+            onChange={handleCodeChange}
+            basicSetup={{
+              lineNumbers: true,
+              highlightActiveLineGutter: true,
+              highlightActiveLine: true,
+              foldGutter: false,
+              dropCursor: true,
+              allowMultipleSelections: true,
+              indentOnInput: true,
+              syntaxHighlighting: true,
+              bracketMatching: true,
+              closeBrackets: true,
+              autocompletion: true,
+              rectangularSelection: true,
+              crosshairCursor: false,
+              highlightSelectionMatches: true,
+            }}
+            style={{
+              fontSize: '14px',
+              lineHeight: '1.6',
+              fontFamily: '"JetBrains Mono", "Consolas", "Courier New", monospace',
+            }}
+          />
+        </div>
 
-        {/* Output Display */}
+        {/* Output Display (Terminal style) */}
         {block.output && (
-          <div className="border-t border-stone-200 dark:border-stone-700 animate-fadeInSlideUp">
+          <div className="border-t border-[#2d2d2d]" style={{ backgroundColor: '#1e1e1e' }}>
+            {/* Output Header */}
+            <div className="flex items-center justify-between px-4 py-1.5 border-b border-[#2d2d2d]" style={{ backgroundColor: '#252526' }}>
+              <div className="flex items-center gap-2">
+                <svg className="w-3.5 h-3.5 text-[#858585]" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M2 5a2 2 0 012-2h12a2 2 0 012 2v10a2 2 0 01-2 2H4a2 2 0 01-2-2V5zm3.293 1.293a1 1 0 011.414 0l3 3a1 1 0 010 1.414l-3 3a1 1 0 01-1.414-1.414L7.586 10 5.293 7.707a1 1 0 010-1.414zM11 12a1 1 0 100 2h3a1 1 0 100-2h-3z" clipRule="evenodd" />
+                </svg>
+                <span className="text-xs text-[#cccccc]" style={{ fontFamily: '"Segoe UI", -apple-system, BlinkMacSystemFont, sans-serif' }}>OUTPUT</span>
+              </div>
+            </div>
+
             {/* Stdout */}
             {block.output.stdout && (
-              <div className="px-5 py-4 bg-white dark:bg-stone-800 border-b border-stone-100 dark:border-stone-700">
-                <div className="text-xs font-semibold text-emerald-700 dark:text-emerald-400 mb-3 flex items-center gap-2">
-                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                  </svg>
-                  Output
-                </div>
-                <pre className="text-base font-mono text-stone-800 dark:text-stone-200 whitespace-pre-wrap bg-stone-50 dark:bg-stone-900 p-3 rounded-lg border border-stone-200 dark:border-stone-700 max-h-[400px] overflow-y-auto">
+              <div className="px-4 py-3" style={{ backgroundColor: '#1e1e1e' }}>
+                <pre className="text-sm font-mono text-[#cccccc] whitespace-pre-wrap max-h-[300px] overflow-y-auto" style={{ fontFamily: '"JetBrains Mono", "Consolas", monospace' }}>
                   {block.output.stdout}
                 </pre>
               </div>
@@ -240,14 +249,14 @@ export const CodeMirrorBlock = ({ noteId, block }: CodeMirrorBlockProps) => {
 
             {/* Stderr */}
             {block.output.stderr && (
-              <div className="px-5 py-4 bg-red-50 dark:bg-red-900/20 border-t border-red-200 dark:border-red-900/30">
-                <div className="text-xs font-semibold text-red-700 dark:text-red-400 mb-3 flex items-center gap-2">
-                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M18 5v8a2 2 0 01-2 2h-5l-5 4v-4H4a2 2 0 01-2-2V5a2 2 0 012-2h12a2 2 0 012 2zm-11-1a1 1 0 11-2 0 1 1 0 012 0z" clipRule="evenodd" />
+              <div className="px-4 py-3 border-t border-[#2d2d2d]" style={{ backgroundColor: '#1e1e1e' }}>
+                <div className="flex items-center gap-2 mb-2">
+                  <svg className="w-3.5 h-3.5 text-[#f48771]" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
                   </svg>
-                  Error Output
+                  <span className="text-xs text-[#f48771]" style={{ fontFamily: '"Segoe UI", -apple-system, BlinkMacSystemFont, sans-serif' }}>ERROR</span>
                 </div>
-                <pre className="text-base font-mono text-red-800 dark:text-red-300 whitespace-pre-wrap bg-white dark:bg-stone-900 p-4 rounded-lg border border-red-200 dark:border-red-900/30 max-h-[300px] overflow-y-auto">
+                <pre className="text-sm font-mono text-[#f48771] whitespace-pre-wrap max-h-[300px] overflow-y-auto" style={{ fontFamily: '"JetBrains Mono", "Consolas", monospace' }}>
                   {block.output.stderr}
                 </pre>
               </div>
@@ -255,30 +264,33 @@ export const CodeMirrorBlock = ({ noteId, block }: CodeMirrorBlockProps) => {
 
             {/* Error */}
             {block.output.error && (
-              <div className="px-5 py-4 bg-red-50 dark:bg-red-900/20 border-t border-red-200 dark:border-red-900/30">
-                <div className="text-xs font-semibold text-red-700 dark:text-red-400 mb-3 flex items-center gap-2">
-                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+              <div className="px-4 py-3 border-t border-[#2d2d2d]" style={{ backgroundColor: '#1e1e1e' }}>
+                <div className="flex items-center gap-2 mb-2">
+                  <svg className="w-3.5 h-3.5 text-[#f48771]" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
                   </svg>
-                  Error
+                  <span className="text-xs text-[#f48771]" style={{ fontFamily: '"Segoe UI", -apple-system, BlinkMacSystemFont, sans-serif' }}>EXECUTION ERROR</span>
                 </div>
-                <pre className="text-base font-mono text-red-800 dark:text-red-300 whitespace-pre-wrap bg-white dark:bg-stone-900 p-4 rounded-lg border border-red-200 dark:border-red-900/30 max-h-[300px] overflow-y-auto">
+                <pre className="text-sm font-mono text-[#f48771] whitespace-pre-wrap max-h-[300px] overflow-y-auto" style={{ fontFamily: '"JetBrains Mono", "Consolas", monospace' }}>
                   {block.output.error}
                 </pre>
               </div>
             )}
-
-            {/* Execution Time */}
-            {block.output.executionTime !== undefined && (
-              <div className="px-5 py-3 bg-stone-100 dark:bg-stone-800 border-t border-stone-200 dark:border-stone-700 text-xs text-stone-600 dark:text-stone-400 font-medium flex items-center gap-2">
-                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v3.586L7.707 9.293a1 1 0 00-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 10.586V7z" clipRule="evenodd" />
-                </svg>
-                Executed in {block.output.executionTime}ms
-              </div>
-            )}
           </div>
         )}
+
+        {/* Status Bar (VS Code style) */}
+        <div className="flex items-center justify-between px-4 py-1 text-xs border-t border-[#2d2d2d]" style={{ backgroundColor: '#007acc', color: 'white', fontFamily: '"Segoe UI", -apple-system, BlinkMacSystemFont, sans-serif' }}>
+          <div className="flex items-center gap-4">
+            <span className="font-medium">{block.language.toUpperCase()}</span>
+            {block.output?.executionTime !== undefined && (
+              <span className="opacity-90">Executed in {block.output.executionTime}ms</span>
+            )}
+          </div>
+          <div>
+            {isExecuting ? 'Executing...' : cloudExecutionEnabled ? 'Ready' : 'Cloud execution disabled'}
+          </div>
+        </div>
       </div>
     </div>
   );
