@@ -2,6 +2,7 @@ import { useNotesStore, createNewNote } from '../../store/notesStore';
 import toast from 'react-hot-toast';
 import { useRef } from 'react';
 import clsx from 'clsx';
+import { Logo } from './Logo';
 
 interface HeaderProps {
   onToggleMobileSidebar: () => void;
@@ -85,7 +86,8 @@ export const Header = ({ onToggleMobileSidebar }: HeaderProps) => {
           </svg>
         </button>
 
-        <div className="flex items-baseline gap-3">
+        <div className="flex items-center gap-3">
+          <Logo className="w-8 h-8 text-stone-900 dark:text-stone-50" />
           <h1 className="text-2xl md:text-3xl font-semibold text-stone-900 dark:text-stone-50 tracking-tight">
             Sandbooks
           </h1>
@@ -134,15 +136,15 @@ export const Header = ({ onToggleMobileSidebar }: HeaderProps) => {
             isCreatingSandbox
               ? "Creating sandbox..."
               : cloudExecutionEnabled
-              ? "Cloud execution enabled"
-              : "Cloud execution disabled"
+                ? "Cloud execution enabled"
+                : "Cloud execution disabled"
           }
           aria-label={
             isCreatingSandbox
               ? "Creating sandbox"
               : cloudExecutionEnabled
-              ? "Disable cloud execution"
-              : "Enable cloud execution"
+                ? "Disable cloud execution"
+                : "Enable cloud execution"
           }
         >
           {isCreatingSandbox ? (

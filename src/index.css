@@ -10,11 +10,14 @@ body {
 
 html.dark,
 html.dark body {
-  background-color: #1c1917; /* stone-900 to match Tailwind components */
+  background-color: #1c1917;
+  /* stone-900 to match Tailwind components */
 }
 
 /* Font rendering optimization for crisp text on all platforms */
-html, body {
+html,
+body {
+  font-family: 'JetBrains Mono Variable', monospace;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
@@ -22,7 +25,9 @@ html, body {
 }
 
 /* Enable ligatures for code blocks */
-code, pre, .font-mono {
+code,
+pre,
+.font-mono {
   font-variant-ligatures: common-ligatures;
 }
 
@@ -45,7 +50,7 @@ ul[data-type="taskList"] li label {
   margin-top: 0.125rem;
 }
 
-ul[data-type="taskList"] li > label > input[type="checkbox"] {
+ul[data-type="taskList"] li>label>input[type="checkbox"] {
   width: 1.125rem;
   height: 1.125rem;
   border: 2px solid #cbd5e1;
@@ -56,7 +61,7 @@ ul[data-type="taskList"] li > label > input[type="checkbox"] {
   background-color: white;
 }
 
-ul[data-type="taskList"] li > label > input[type="checkbox"]:checked {
+ul[data-type="taskList"] li>label>input[type="checkbox"]:checked {
   background-color: #2563eb;
   border-color: #2563eb;
   background-image: url("data:image/svg+xml,%3csvg viewBox='0 0 16 16' fill='white' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='M12.207 4.793a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0l-2-2a1 1 0 011.414-1.414L6.5 9.086l4.293-4.293a1 1 0 011.414 0z'/%3e%3c/svg%3e");
@@ -65,12 +70,12 @@ ul[data-type="taskList"] li > label > input[type="checkbox"]:checked {
   background-repeat: no-repeat;
 }
 
-ul[data-type="taskList"] li > div {
+ul[data-type="taskList"] li>div {
   flex: 1;
   padding-top: 0.125rem;
 }
 
-ul[data-type="taskList"] li[data-checked="true"] > div {
+ul[data-type="taskList"] li[data-checked="true"]>div {
   text-decoration: line-through;
   color: #64748b;
 }
@@ -130,8 +135,7 @@ ul[data-type="taskList"] li[data-checked="true"] > div {
     linear-gradient(135deg,
       rgba(255, 255, 255, 0.5) 0%,
       rgba(255, 255, 255, 0.1) 50%,
-      rgba(0, 0, 0, 0.05) 100%
-    );
+      rgba(0, 0, 0, 0.05) 100%);
   background-origin: padding-box, border-box;
   background-clip: padding-box, border-box;
   backdrop-filter: blur(var(--blur-modal));
@@ -151,8 +155,7 @@ ul[data-type="taskList"] li[data-checked="true"] > div {
     linear-gradient(135deg,
       rgba(255, 255, 255, 0.2) 0%,
       rgba(255, 255, 255, 0.05) 50%,
-      rgba(0, 0, 0, 0.3) 100%
-    );
+      rgba(0, 0, 0, 0.3) 100%);
 }
 
 /* Glass Backdrop */
@@ -210,6 +213,7 @@ ul[data-type="taskList"] li[data-checked="true"] > div {
 
 /* Accessibility: Respect user preferences */
 @media (prefers-reduced-transparency: reduce) {
+
   .glass-modal,
   .glass-card {
     backdrop-filter: none;
@@ -230,6 +234,7 @@ ul[data-type="taskList"] li[data-checked="true"] > div {
 }
 
 @media (prefers-reduced-motion: reduce) {
+
   *,
   *::before,
   *::after {
@@ -241,9 +246,26 @@ ul[data-type="taskList"] li[data-checked="true"] > div {
 
 /* Tag System Animations */
 @keyframes shake {
-  0%, 100% { transform: translateX(0); }
-  10%, 30%, 50%, 70%, 90% { transform: translateX(-4px); }
-  20%, 40%, 60%, 80% { transform: translateX(4px); }
+
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+
+  10%,
+  30%,
+  50%,
+  70%,
+  90% {
+    transform: translateX(-4px);
+  }
+
+  20%,
+  40%,
+  60%,
+  80% {
+    transform: translateX(4px);
+  }
 }
 
 .animate-shake {
@@ -278,18 +300,26 @@ ul[data-type="taskList"] li[data-checked="true"] > div {
   left: 0;
   width: 100%;
   height: 100%;
-  pointer-events: none; /* Prevents interaction, passes through to editable layer */
+  pointer-events: none;
+  /* Prevents interaction, passes through to editable layer */
   z-index: 0;
 
   /* Critical: Must match editable layer exactly */
-  padding: 1.5rem; /* p-6 */
-  overflow: auto; /* Matches overflow behavior */
+  padding: 1.5rem;
+  /* p-6 */
+  overflow: auto;
+  /* Matches overflow behavior */
   font-family: 'JetBrains Mono Variable', 'SF Mono', 'Monaco', 'Inconsolata', 'Consolas', 'Courier New', monospace;
-  font-size: 14px; /* text-base */
-  line-height: 1.625; /* leading-relaxed */
-  white-space: pre; /* Preserves whitespace exactly like textarea */
-  word-wrap: normal; /* Prevents word wrapping */
-  tab-size: 2; /* Consistent tab width */
+  font-size: 14px;
+  /* text-base */
+  line-height: 1.625;
+  /* leading-relaxed */
+  white-space: pre;
+  /* Preserves whitespace exactly like textarea */
+  word-wrap: normal;
+  /* Prevents word wrapping */
+  tab-size: 2;
+  /* Consistent tab width */
 }
 
 /* Foreground layer (editable) - relative position creates stacking context */
@@ -300,20 +330,31 @@ ul[data-type="taskList"] li[data-checked="true"] > div {
 
   /* Transparent text with visible caret */
   color: transparent;
-  caret-color: rgb(59, 130, 246); /* Blue caret */
-  -webkit-text-fill-color: transparent; /* Safari fix */
+  caret-color: rgb(59, 130, 246);
+  /* Blue caret */
+  -webkit-text-fill-color: transparent;
+  /* Safari fix */
 
   /* Critical: Must match highlighting layer exactly */
-  padding: 1.5rem; /* p-6 */
-  overflow: auto; /* Creates scroll container */
+  padding: 1.5rem;
+  /* p-6 */
+  overflow: auto;
+  /* Creates scroll container */
   font-family: 'JetBrains Mono Variable', 'SF Mono', 'Monaco', 'Inconsolata', 'Consolas', 'Courier New', monospace;
-  font-size: 14px; /* text-base */
-  line-height: 1.625; /* leading-relaxed */
-  white-space: pre; /* Preserves whitespace */
-  word-wrap: normal; /* Prevents word wrapping */
-  tab-size: 2; /* Consistent tab width */
-  resize: none; /* Prevents resize handle */
-  outline: none; /* Remove default outline */
+  font-size: 14px;
+  /* text-base */
+  line-height: 1.625;
+  /* leading-relaxed */
+  white-space: pre;
+  /* Preserves whitespace */
+  word-wrap: normal;
+  /* Prevents word wrapping */
+  tab-size: 2;
+  /* Consistent tab width */
+  resize: none;
+  /* Prevents resize handle */
+  outline: none;
+  /* Remove default outline */
 }
 
 /* Ensure minimum height to prevent collapsing */
@@ -326,6 +367,7 @@ ul[data-type="taskList"] li[data-checked="true"] > div {
 .code-highlighting::-webkit-scrollbar {
   display: none;
 }
+
 .code-highlighting {
   -ms-overflow-style: none;
   scrollbar-width: none;
@@ -336,21 +378,27 @@ ul[data-type="taskList"] li[data-checked="true"] > div {
   width: 8px;
   height: 8px;
 }
+
 .code-editing::-webkit-scrollbar-track {
   background: transparent;
 }
+
 .code-editing::-webkit-scrollbar-thumb {
-  background: rgba(148, 163, 184, 0.3); /* stone-400 with opacity */
+  background: rgba(148, 163, 184, 0.3);
+  /* stone-400 with opacity */
   border-radius: 4px;
 }
+
 .code-editing::-webkit-scrollbar-thumb:hover {
   background: rgba(148, 163, 184, 0.5);
 }
 
 /* Dark mode scrollbar */
 .dark .code-editing::-webkit-scrollbar-thumb {
-  background: rgba(214, 211, 209, 0.2); /* stone-300 with opacity */
+  background: rgba(214, 211, 209, 0.2);
+  /* stone-300 with opacity */
 }
+
 .dark .code-editing::-webkit-scrollbar-thumb:hover {
   background: rgba(214, 211, 209, 0.4);
 }
@@ -382,25 +430,31 @@ ul[data-type="taskList"] li[data-checked="true"] > div {
 .dark .xterm-viewport,
 .dark .xterm-screen,
 .dark .xterm canvas {
-  background-color: #1c1917 !important; /* stone-900 */
+  background-color: #1c1917 !important;
+  /* stone-900 */
 }
 
 /* Ensure DOM renderer rows have proper background and high contrast text */
 .xterm-rows {
   background-color: #ffffff !important;
-  color: #000000 !important; /* Pure black for maximum contrast */
-  min-height: 100px !important; /* Ensure rows container has height */
+  color: #000000 !important;
+  /* Pure black for maximum contrast */
+  min-height: 100px !important;
+  /* Ensure rows container has height */
 }
 
 .dark .xterm-rows {
-  background-color: #1c1917 !important; /* stone-900 */
-  color: #ffffff !important; /* Pure white for maximum contrast */
+  background-color: #1c1917 !important;
+  /* stone-900 */
+  color: #ffffff !important;
+  /* Pure white for maximum contrast */
   min-height: 100px !important;
 }
 
 /* Ensure each row div has proper height */
-.xterm-rows > div {
-  min-height: 18px !important; /* Prevent collapsed rows */
+.xterm-rows>div {
+  min-height: 18px !important;
+  /* Prevent collapsed rows */
   line-height: normal !important;
   display: block !important;
 }
@@ -414,7 +468,8 @@ ul[data-type="taskList"] li[data-checked="true"] > div {
 
 /* Cursor visibility */
 .xterm .xterm-cursor {
-  background-color: #3b82f6 !important; /* blue-500 */
+  background-color: #3b82f6 !important;
+  /* blue-500 */
   display: inline-block !important;
   width: 0.5em !important;
 }

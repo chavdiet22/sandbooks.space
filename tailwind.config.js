@@ -156,7 +156,7 @@ module.exports = {
     },
   },
   plugins: [
-    function({ addComponents }) {
+    function ({ addComponents }) {
       addComponents({
         '.prose': {
           '@apply text-stone-800 dark:text-stone-200 leading-normal bg-transparent': {}, // 1.5 line height (WCAG AAA compliant), transparent to inherit parent bg

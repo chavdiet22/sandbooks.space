@@ -1,6 +1,7 @@
 import { useNotesStore } from '../../store/notesStore';
 import { formatTimestamp } from '../../utils/formatTimestamp';
 import clsx from 'clsx';
+import { Logo } from '../ui/Logo';
 
 export const Sidebar = ({ isMobile = false }: { isMobile?: boolean }) => {
   const { notes, activeNoteId, isSidebarOpen, setActiveNote, deleteNote } = useNotesStore();
@@ -16,14 +17,12 @@ export const Sidebar = ({ isMobile = false }: { isMobile?: boolean }) => {
   if (notes.length === 0) {
     return (
       <div className={clsx(
-      "bg-white dark:bg-stone-900 border-r border-stone-200 dark:border-stone-800 p-8 flex flex-col items-center justify-center self-stretch",
-      isMobile ? "w-full h-full" : "hidden md:flex transition-[width] duration-300 ease-in-out",
-      !isMobile && (isOpen ? "w-80" : "w-0 hidden")
-    )}>
+        "bg-white dark:bg-stone-900 border-r border-stone-200 dark:border-stone-800 p-8 flex flex-col items-center justify-center self-stretch",
+        isMobile ? "w-full h-full" : "hidden md:flex transition-[width] duration-300 ease-in-out",
+        !isMobile && (isOpen ? "w-80" : "w-0 hidden")
+      )}>
         <div className="text-center">
-          <svg className="w-16 h-16 mx-auto text-stone-300 dark:text-stone-600 mb-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-          </svg>
+          <Logo className="w-16 h-16 mx-auto text-stone-300 dark:text-stone-600 mb-6" />
           <p className="text-sm font-medium text-stone-600 dark:text-stone-400">No notes yet</p>
           <p className="text-xs text-stone-500 dark:text-stone-500 mt-2">Click "+ New Note" to get started</p>
         </div>
@@ -45,12 +44,16 @@ export const Sidebar = ({ isMobile = false }: { isMobile?: boolean }) => {
             <div
               key={note.id}
               className={clsx(
-                'px-3 md:px-5 py-3 md:py-4 mb-2 rounded-xl transition-[transform,box-shadow,background-color] duration-300 ease-spring group relative shadow-elevation-1 hover:shadow-elevation-2 hover:-translate-y-0.5 hover:scale-[1.02]',
+                'px-3 md:px-4 py-3 md:py-3.5 mb-1 mx-2 rounded-lg transition-all duration-200 ease-out group relative',
                 activeNoteId === note.id
-                  ? 'bg-gradient-to-br from-blue-50 to-blue-100/50 dark:from-blue-900/20 dark:to-blue-900/10 text-blue-900 dark:text-blue-100 font-semibold'
-                  : 'bg-gradient-to-br from-stone-50 to-white dark:from-stone-800 dark:to-stone-900 hover:from-stone-100 hover:to-white dark:hover:from-stone-750 dark:hover:to-stone-850 text-stone-700 dark:text-stone-300'
+                  ? 'bg-white dark:bg-stone-800 shadow-sm ring-1 ring-stone-200 dark:ring-stone-700 z-10 text-stone-900 dark:text-stone-100'
+                  : 'hover:bg-stone-100 dark:hover:bg-stone-800/40 text-stone-600 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-200'
               )}
             >
+              {/* Active Indicator */}
+              {activeNoteId === note.id && (
+                <div className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-1 bg-blue-600 rounded-r-full" />
+              )}
               <div className="flex items-start justify-between gap-2">
                 <button
                   onClick={() => setActiveNote(note.id)}
@@ -59,10 +62,10 @@ export const Sidebar = ({ isMobile = false }: { isMobile?: boolean }) => {
                   aria-current={activeNoteId === note.id ? 'true' : 'false'}
                 >
                   <h3 className={clsx(
-                    'truncate text-sm md:text-base leading-tight',
+                    'truncate text-sm font-medium leading-snug pl-2',
                     activeNoteId === note.id
-                      ? 'text-blue-900 dark:text-blue-100 font-semibold'
-                      : 'text-stone-900 dark:text-stone-50 font-medium'
+                      ? 'text-stone-900 dark:text-stone-100'
+                      : 'text-stone-700 dark:text-stone-300 group-hover:text-stone-900 dark:group-hover:text-stone-200'
                   )}>
                     {note.title}
                   </h3>
@@ -70,10 +73,7 @@ export const Sidebar = ({ isMobile = false }: { isMobile?: boolean }) => {
                     dateTime={timestamp.datetime}
                     aria-label={`Last edited ${timestamp.absolute}`}
                     title={timestamp.absolute}
-                    className={clsx(
-                      'block text-xs mt-1 md:mt-2',
-                      activeNoteId === note.id ? 'text-blue-600 dark:text-blue-300' : 'text-stone-500 dark:text-stone-400'
-                    )}
+                    className="block text-xs mt-1 pl-2 text-stone-400 dark:text-stone-500"
                   >
                     {timestamp.relative}
                   </time>
@@ -104,27 +104,27 @@ export const Sidebar = ({ isMobile = false }: { isMobile?: boolean }) => {
                     </div>
                   )}
                 </button>
-              <button
-                onClick={(e) => handleDelete(e, note.id)}
-                className="opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 text-stone-400 dark:text-stone-500 hover:text-red-600 dark:hover:text-red-400 transition-[opacity,color,background-color,transform] duration-200 flex-shrink-0 p-2 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-red-600 focus-visible:ring-offset-3 focus-visible:opacity-100 active:scale-[0.95]"
-                title="Delete note"
-                aria-label={`Delete note: ${note.title}`}
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-4 w-4"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
+                <button
+                  onClick={(e) => handleDelete(e, note.id)}
+                  className="opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 text-stone-400 dark:text-stone-500 hover:text-red-600 dark:hover:text-red-400 transition-[opacity,color,background-color,transform] duration-200 flex-shrink-0 p-2 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-red-600 focus-visible:ring-offset-3 focus-visible:opacity-100 active:scale-[0.95]"
+                  title="Delete note"
+                  aria-label={`Delete note: ${note.title}`}
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                  />
-                </svg>
-              </button>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-4 w-4"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                    />
+                  </svg>
+                </button>
               </div>
             </div>
           );

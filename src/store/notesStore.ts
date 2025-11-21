@@ -17,8 +17,8 @@ const initDarkMode = (): boolean => {
   if (stored !== null) {
     return stored === 'true';
   }
-  // Default to system preference
-  return window.matchMedia('(prefers-color-scheme: dark)').matches;
+  // Default to dark mode 
+  return true;
 };
 
 // Initialize typewriter mode from localStorage
@@ -674,18 +674,18 @@ export const useNotesStore = create<NotesStore>((set, get) => ({
       notes: state.notes.map((note) =>
         note.id === noteId
           ? {
-              ...note,
-              codeBlocks: [
-                ...(note.codeBlocks || []),
-                {
-                  ...codeBlock,
-                  id: `code_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-                  createdAt: Date.now(),
-                  updatedAt: Date.now(),
-                },
-              ],
-              updatedAt: new Date().toISOString(),
-            }
+            ...note,
+            codeBlocks: [
+              ...(note.codeBlocks || []),
+              {
+                ...codeBlock,
+                id: `code_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+                createdAt: Date.now(),
+                updatedAt: Date.now(),
+              },
+            ],
+            updatedAt: new Date().toISOString(),
+          }
           : note
       ),
     }));
@@ -697,14 +697,14 @@ export const useNotesStore = create<NotesStore>((set, get) => ({
       notes: state.notes.map((note) =>
         note.id === noteId
           ? {
-              ...note,
-              codeBlocks: note.codeBlocks?.map((block) =>
-                block.id === blockId
-                  ? { ...block, ...updates, updatedAt: Date.now() }
-                  : block
-              ),
-              updatedAt: new Date().toISOString(),
-            }
+            ...note,
+            codeBlocks: note.codeBlocks?.map((block) =>
+              block.id === blockId
+                ? { ...block, ...updates, updatedAt: Date.now() }
+                : block
+            ),
+            updatedAt: new Date().toISOString(),
+          }
           : note
       ),
     }));
@@ -716,10 +716,10 @@ export const useNotesStore = create<NotesStore>((set, get) => ({
       notes: state.notes.map((note) =>
         note.id === noteId
           ? {
-              ...note,
-              codeBlocks: note.codeBlocks?.filter((block) => block.id !== blockId),
-              updatedAt: new Date().toISOString(),
-            }
+            ...note,
+            codeBlocks: note.codeBlocks?.filter((block) => block.id !== blockId),
+            updatedAt: new Date().toISOString(),
+          }
           : note
       ),
     }));

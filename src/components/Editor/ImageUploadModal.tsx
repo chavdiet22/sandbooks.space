@@ -146,21 +146,21 @@ export const ImageUploadModal = ({ onInsert, onClose, initialFiles }: ImageUploa
 
   return (
     <div
-      className="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm flex items-center justify-center z-50 animate-fadeIn"
+      className="fixed inset-0 bg-stone-900/40 dark:bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 animate-fadeIn"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div className="bg-white dark:bg-stone-800 rounded-2xl p-8 max-w-lg w-full mx-4 shadow-elevation-5 animate-scaleIn">
-        <h3 className="text-xl font-semibold mb-6 text-stone-900 dark:text-stone-50">
+      <div className="bg-white dark:bg-stone-900 rounded-xl border border-stone-200 dark:border-stone-800 p-6 max-w-md w-full mx-4 shadow-elevation-4 animate-scaleIn">
+        <h3 className="text-lg font-bold mb-5 text-stone-900 dark:text-stone-50 tracking-tight">
           Insert Image
         </h3>
 
         {/* Tab-like section headers */}
-        <div className="space-y-6">
+        <div className="space-y-5">
           {/* URL Input Section */}
           <div>
-            <label className="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-2">
+            <label className="block text-xs font-semibold uppercase tracking-wider text-stone-500 dark:text-stone-400 mb-2">
               Image URL
             </label>
             <input
@@ -175,7 +175,7 @@ export const ImageUploadModal = ({ onInsert, onClose, initialFiles }: ImageUploa
                 }
               }}
               placeholder="https://example.com/image.png"
-              className="w-full px-4 py-3 border-2 border-stone-300 dark:border-stone-600 rounded-lg bg-white dark:bg-stone-900 text-stone-900 dark:text-stone-50 placeholder-stone-400 dark:placeholder-stone-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+              className="w-full px-3 py-2.5 text-sm border border-stone-200 dark:border-stone-700 rounded-lg bg-stone-50 dark:bg-stone-800/50 text-stone-900 dark:text-stone-50 placeholder-stone-400 dark:placeholder-stone-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all duration-200"
               aria-label="Image URL"
               autoFocus
               disabled={isProcessing}
@@ -183,12 +183,12 @@ export const ImageUploadModal = ({ onInsert, onClose, initialFiles }: ImageUploa
           </div>
 
           {/* Divider */}
-          <div className="relative">
+          <div className="relative py-1">
             <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-stone-200 dark:border-stone-700" />
+              <div className="w-full border-t border-stone-200 dark:border-stone-800" />
             </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="px-4 bg-white dark:bg-stone-800 text-stone-500 dark:text-stone-400">
+            <div className="relative flex justify-center text-xs uppercase tracking-wider font-medium">
+              <span className="px-3 bg-white dark:bg-stone-900 text-stone-400 dark:text-stone-500">
                 or
               </span>
             </div>
@@ -196,7 +196,7 @@ export const ImageUploadModal = ({ onInsert, onClose, initialFiles }: ImageUploa
 
           {/* File Upload Section */}
           <div>
-            <label className="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-2">
+            <label className="block text-xs font-semibold uppercase tracking-wider text-stone-500 dark:text-stone-400 mb-2">
               Upload from Computer
             </label>
 
@@ -206,10 +206,10 @@ export const ImageUploadModal = ({ onInsert, onClose, initialFiles }: ImageUploa
               onDragLeave={handleDragLeave}
               onDrop={handleDrop}
               className={`
-                relative border-2 border-dashed rounded-lg p-8 text-center transition-all duration-200
+                relative border-2 border-dashed rounded-xl p-6 text-center transition-all duration-200 group
                 ${isDragging
                   ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
-                  : 'border-stone-300 dark:border-stone-600 hover:border-stone-400 dark:hover:border-stone-500'
+                  : 'border-stone-200 dark:border-stone-700 hover:border-stone-400 dark:hover:border-stone-600 hover:bg-stone-50 dark:hover:bg-stone-800/50'
                 }
                 ${isProcessing ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
               `}
@@ -227,32 +227,34 @@ export const ImageUploadModal = ({ onInsert, onClose, initialFiles }: ImageUploa
 
               {isProcessing ? (
                 <div className="space-y-3">
-                  <div className="w-12 h-12 mx-auto border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
-                  <p className="text-sm text-stone-600 dark:text-stone-400">
-                    Processing images...
+                  <div className="w-8 h-8 mx-auto border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+                  <p className="text-xs font-medium text-stone-600 dark:text-stone-400">
+                    Processing...
                   </p>
                 </div>
               ) : (
-                <div className="space-y-3">
-                  <svg
-                    className="w-12 h-12 mx-auto text-stone-400 dark:text-stone-500"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
-                    />
-                  </svg>
+                <div className="space-y-2">
+                  <div className="w-10 h-10 mx-auto rounded-full bg-stone-100 dark:bg-stone-800 flex items-center justify-center group-hover:scale-110 transition-transform duration-200">
+                    <svg
+                      className="w-5 h-5 text-stone-500 dark:text-stone-400"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+                      />
+                    </svg>
+                  </div>
                   <div>
-                    <p className="text-stone-700 dark:text-stone-300 font-medium">
-                      {isDragging ? 'Drop images here' : 'Click to upload or drag & drop'}
+                    <p className="text-sm font-medium text-stone-700 dark:text-stone-300">
+                      Click to upload
                     </p>
-                    <p className="text-sm text-stone-500 dark:text-stone-400 mt-1">
-                      PNG, JPEG, GIF, or WebP (max 5MB each)
+                    <p className="text-xs text-stone-500 dark:text-stone-500 mt-1">
+                      PNG, JPG, GIF (max 5MB)
                     </p>
                   </div>
                 </div>
@@ -262,11 +264,11 @@ export const ImageUploadModal = ({ onInsert, onClose, initialFiles }: ImageUploa
         </div>
 
         {/* Action Buttons */}
-        <div className="flex gap-2 justify-end mt-8">
+        <div className="flex gap-3 justify-end mt-8">
           <button
             onClick={onClose}
             disabled={isProcessing}
-            className="px-5 py-2.5 text-stone-600 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-700 rounded-lg transition-all duration-200 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-blue-600 focus-visible:ring-offset-3 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-4 py-2 text-sm font-medium text-stone-600 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-200 hover:bg-stone-100 dark:hover:bg-stone-800 rounded-lg transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-stone-400"
             aria-label="Cancel image insertion"
           >
             Cancel
@@ -274,10 +276,10 @@ export const ImageUploadModal = ({ onInsert, onClose, initialFiles }: ImageUploa
           <button
             onClick={handleUrlInsert}
             disabled={isProcessing || !imageUrl.trim()}
-            className="px-5 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 shadow-elevation-1 hover:shadow-elevation-2 transition-all duration-200 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-blue-600 focus-visible:ring-offset-3 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-4 py-2 text-sm font-medium bg-stone-900 dark:bg-stone-100 text-white dark:text-stone-900 rounded-lg hover:bg-stone-800 dark:hover:bg-white shadow-sm hover:shadow transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-stone-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none"
             aria-label="Insert image from URL"
           >
-            {isProcessing ? 'Processing...' : 'Insert from URL'}
+            {isProcessing ? 'Processing...' : 'Insert Image'}
           </button>
         </div>
       </div>
