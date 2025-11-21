@@ -116,6 +116,24 @@ function App() {
     closeMobileSidebar();
   }, [activeNoteId, isMobileSidebarOpen]);
 
+  // Escape key always blurs focused elements, enabling shortcuts
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        const target = document.activeElement as HTMLElement;
+        if (target &&
+            (['INPUT', 'TEXTAREA'].includes(target.tagName) ||
+             target.contentEditable === 'true' ||
+             target.classList.contains('ProseMirror'))) {
+          target.blur();
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleEscape, true);
+    return () => window.removeEventListener('keydown', handleEscape, true);
+  }, []);
+
   // Global keyboard shortcuts (Gmail/Linear pattern: context-sensitive, cross-platform)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
