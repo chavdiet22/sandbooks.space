@@ -40,7 +40,7 @@
 - 📱 **Mobile Responsive**: Hamburger menu, slide-in sidebar, touch-optimized UI
 - ♿ **Accessibility**: WCAG 2.1 AA compliant (keyboard navigation, screen reader support)
 - 💾 **Local-First**: Notes stored in browser localStorage with export/import
-- ☁️ **Cloud Execution**: Secure sandboxed execution via [Hopx SDK](https://hopx.com)
+- ☁️ **Cloud Execution**: Secure sandboxed execution via [Hopx SDK](https://hopx.ai)
 - 🖥️ **Integrated Terminal**: Quake-style terminal with persistent sessions
 - 🏷️ **Tag System**: Color-coded tags with search integration
 - 🎨 **Glass Morphism**: Modern UI with backdrop blur effects
@@ -53,7 +53,7 @@
 
 - **Node.js** 20.x or higher
 - **npm** 9.x or higher
-- **Hopx API Key** (sign up at [hopx.com](https://hopx.com))
+- **Hopx API Key** (sign up at [hopx.ai](https://hopx.ai))
 
 ### Installation
 
@@ -257,7 +257,7 @@ NODE_ENV=development           # Environment
 |-----------|---------|---------|
 | [Node.js](https://nodejs.org/) | 20+ | Runtime |
 | [Express](https://expressjs.com/) | 4.x | HTTP server |
-| [Hopx SDK](https://hopx.com) | 0.3.3 | Cloud sandbox execution |
+| [Hopx SDK](https://hopx.ai) | 0.3.3 | Cloud sandbox execution |
 | [TypeScript](https://www.typescriptlang.org/) | 5.6 | Type safety |
 | [Winston](https://github.com/winstonjs/winston) | 3.x | Logging |
 
