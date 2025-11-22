@@ -1,58 +1,19 @@
 import { useNotesStore, createNewNote } from '../../store/notesStore';
-import { showToast as toast } from '../../utils/toast';
-import { useRef } from 'react';
 import clsx from 'clsx';
 import { Logo } from './Logo';
+import { SyncStatusIcon } from './SyncStatusIcon';
 
 interface HeaderProps {
   onToggleMobileSidebar: () => void;
 }
 
 export const Header = ({ onToggleMobileSidebar }: HeaderProps) => {
-  const { notes, addNote, importNotes, exportNotes, activeNoteId, cloudExecutionEnabled, toggleCloudExecution, darkModeEnabled, toggleDarkMode, isSidebarOpen, toggleSidebar, isCreatingSandbox, isTerminalOpen, toggleTerminal } = useNotesStore();
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const { notes, activeNoteId, cloudExecutionEnabled, toggleCloudExecution, darkModeEnabled, toggleDarkMode, isSidebarOpen, toggleSidebar, isCreatingSandbox, isTerminalOpen, toggleTerminal, addNote } = useNotesStore();
   const activeNote = notes.find(n => n.id === activeNoteId);
 
   const handleNewNote = () => {
     const newNote = createNewNote();
     addNote(newNote);
-  };
-
-  const handleExport = () => {
-    const data = exportNotes();
-    const blob = new Blob([data], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `sandbooks-${new Date().toISOString().split('T')[0]}.json`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  };
-
-  const handleImportClick = () => {
-    fileInputRef.current?.click();
-  };
-
-  const handleImportFile = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      try {
-        const data = event.target?.result as string;
-        importNotes(data);
-        toast.success('Notes imported successfully!');
-      } catch (error) {
-        toast.error(error instanceof Error ? error.message : 'Import failed');
-      }
-    };
-    reader.readAsText(file);
-
-    // Reset input
-    e.target.value = '';
   };
 
   return (
@@ -203,34 +164,10 @@ export const Header = ({ onToggleMobileSidebar }: HeaderProps) => {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
           </svg>
         </button>
-        <button
-          onClick={handleExport}
-          disabled={notes.length === 0}
-          className="hidden md:flex p-1.5 md:p-2 lg:p-2.5 hover:bg-stone-100 dark:hover:bg-stone-800 rounded-lg transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed group focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-blue-600 focus-visible:ring-offset-3 active:scale-[0.98] disabled:active:scale-100"
-          title="Export notes"
-          aria-label="Export all notes"
-        >
-          <svg className="w-5 h-5 text-stone-600 dark:text-stone-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-          </svg>
-        </button>
-        <button
-          onClick={handleImportClick}
-          className="hidden md:flex p-1.5 md:p-2 lg:p-2.5 hover:bg-stone-100 dark:hover:bg-stone-800 rounded-lg transition-all duration-200 group focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-blue-600 focus-visible:ring-offset-3 active:scale-[0.98]"
-          title="Import notes"
-          aria-label="Import notes from file"
-        >
-          <svg className="w-5 h-5 text-stone-600 dark:text-stone-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-          </svg>
-        </button>
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept=".json"
-          onChange={handleImportFile}
-          className="hidden"
-        />
+
+        <div className="hidden md:block w-px h-6 bg-stone-300 dark:bg-stone-700"></div>
+
+        <SyncStatusIcon />
       </div>
     </header>
   );

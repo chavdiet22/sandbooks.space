@@ -48,6 +48,8 @@ export type SandboxStatus =
   | 'unknown'    // Gray - checking health
   | 'creating';  // Blue - creating sandbox
 
+export type SyncStatus = 'synced' | 'saving' | 'error' | 'disconnected';
+
 export interface CodeBlockAttrs {
   language: string;
   executionResult?: ExecutionResult;
@@ -79,6 +81,8 @@ export interface NotesStore {
   lastHealthCheck: number | null;
   retryCount: number;
   isCreatingSandbox: boolean;
+  syncStatus: SyncStatus;
+  lastSyncedAt: string | null;
   addNote: (note: Note) => void;
   updateNote: (id: string, updates: Partial<Note>) => void;
   deleteNote: (id: string) => void;

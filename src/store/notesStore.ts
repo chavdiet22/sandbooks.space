@@ -101,12 +101,19 @@ export const useNotesStore = create<NotesStore>((set, get) => ({
   lastHealthCheck: null,
   retryCount: 0,
   isCreatingSandbox: false,
+  syncStatus: 'synced',
+  lastSyncedAt: null,
 
   addNote: (note: Note) => {
     set((state) => {
       const newNotes = [...state.notes, note];
       storageService.saveNotes(newNotes);
-      return { notes: newNotes, activeNoteId: note.id };
+      return {
+        notes: newNotes,
+        activeNoteId: note.id,
+        syncStatus: 'synced',
+        lastSyncedAt: new Date().toISOString()
+      };
     });
   },
 
@@ -128,7 +135,11 @@ export const useNotesStore = create<NotesStore>((set, get) => ({
         return note;
       });
       storageService.saveNotes(newNotes);
-      return { notes: newNotes };
+      return {
+        notes: newNotes,
+        syncStatus: 'synced',
+        lastSyncedAt: new Date().toISOString()
+      };
     });
   },
 
@@ -139,6 +150,8 @@ export const useNotesStore = create<NotesStore>((set, get) => ({
       return {
         notes: newNotes,
         activeNoteId: state.activeNoteId === id ? null : state.activeNoteId,
+        syncStatus: 'synced',
+        lastSyncedAt: new Date().toISOString()
       };
     });
   },
@@ -255,7 +268,11 @@ export const useNotesStore = create<NotesStore>((set, get) => ({
         importedCount: importedNotes.length,
         addedCount: newNotes.length,
       });
-      return { notes: allNotes };
+      return {
+        notes: allNotes,
+        syncStatus: 'synced',
+        lastSyncedAt: new Date().toISOString()
+      };
     });
   },
 

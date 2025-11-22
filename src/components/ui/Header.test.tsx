@@ -1,6 +1,6 @@
 import { render, screen, fireEvent } from '@testing-library/react';
 import { Header } from './Header';
-import { vi } from 'vitest';
+import { vi, describe, it, expect, beforeEach } from 'vitest';
 
 // Mocks
 vi.mock('../../store/notesStore', () => {
@@ -19,6 +19,8 @@ vi.mock('../../store/notesStore', () => {
         isCreatingSandbox: false,
         isTerminalOpen: false,
         toggleTerminal: vi.fn(),
+        syncStatus: 'synced',
+        lastSyncedAt: new Date().toISOString(),
     };
     return {
         useNotesStore: vi.fn((selector) => selector ? selector(mockStore) : mockStore),
@@ -37,6 +39,11 @@ vi.mock('./Logo', () => ({
     Logo: () => <div data-testid="logo">Logo</div>,
 }));
 
+// Mock SyncStatusIcon since it has its own complex logic/state
+vi.mock('./SyncStatusIcon', () => ({
+    SyncStatusIcon: () => <div data-testid="sync-status-icon">Sync Status</div>,
+}));
+
 describe('Header Component', () => {
     const mockToggleMobileSidebar = vi.fn();
 
@@ -48,6 +55,7 @@ describe('Header Component', () => {
         render(<Header onToggleMobileSidebar={mockToggleMobileSidebar} />);
         expect(screen.getByText('Sandbooks')).toBeInTheDocument();
         expect(screen.getByTestId('logo')).toBeInTheDocument();
+        expect(screen.getByTestId('sync-status-icon')).toBeInTheDocument();
     });
 
     it('handles dark mode toggle', async () => {
@@ -97,44 +105,6 @@ describe('Header Component', () => {
         fireEvent.click(mobileSidebarButton);
 
         expect(mockToggleMobileSidebar).toHaveBeenCalled();
-    });
-
-    it('handles export notes', async () => {
-        global.URL.createObjectURL = vi.fn();
-        global.URL.revokeObjectURL = vi.fn();
-
-        render(<Header onToggleMobileSidebar={mockToggleMobileSidebar} />);
-
-        const exportButton = screen.getByTitle('Export notes');
-        fireEvent.click(exportButton);
-
-        const { useNotesStore } = await import('../../store/notesStore');
-        expect(useNotesStore().exportNotes).toHaveBeenCalled();
-        expect(global.URL.createObjectURL).toHaveBeenCalled();
-    });
-
-    it('handles import notes', async () => {
-        const { showToast } = await import('../../utils/toast');
-        render(<Header onToggleMobileSidebar={mockToggleMobileSidebar} />);
-
-        const importButton = screen.getByTitle('Import notes');
-        fireEvent.click(importButton);
-
-        const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
-        const file = new File(['[]'], 'notes.json', { type: 'application/json' });
-
-        Object.defineProperty(fileInput, 'files', {
-            value: [file],
-        });
-
-        fireEvent.change(fileInput);
-
-        // Wait for FileReader
-        await new Promise(resolve => setTimeout(resolve, 100));
-
-        const { useNotesStore } = await import('../../store/notesStore');
-        expect(useNotesStore().importNotes).toHaveBeenCalled();
-        expect(showToast.success).toHaveBeenCalledWith('Notes imported successfully!');
     });
 
     it('handles terminal toggle', async () => {
