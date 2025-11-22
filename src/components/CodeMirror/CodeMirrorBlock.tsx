@@ -25,7 +25,7 @@ import { useNotesStore } from '../../store/notesStore';
 import type { Language, CodeBlock as CodeBlockType } from '../../types';
 import { LanguageIcon } from '../Editor/LanguageIcon';
 import clsx from 'clsx';
-import toast from 'react-hot-toast';
+import { showToast as toast } from '../../utils/toast';
 
 interface CodeMirrorBlockProps {
   noteId: string;

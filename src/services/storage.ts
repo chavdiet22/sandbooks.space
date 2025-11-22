@@ -1,5 +1,5 @@
 import type { Note } from '../types';
-import toast from 'react-hot-toast';
+import { showToast as toast } from '../utils/toast';
 
 const STORAGE_KEY = 'sandbooks_notes';
 

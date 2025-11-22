@@ -1,5 +1,5 @@
 import { useNotesStore, createNewNote } from '../../store/notesStore';
-import toast from 'react-hot-toast';
+import { showToast as toast } from '../../utils/toast';
 import { useRef } from 'react';
 import clsx from 'clsx';
 import { Logo } from './Logo';

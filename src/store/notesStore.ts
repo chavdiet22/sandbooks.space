@@ -7,7 +7,7 @@ import { storageService } from '../services/storage';
 import { extractTitleFromContent } from '../utils/titleExtraction';
 import { getNextTagColor } from '../utils/tagColors';
 import { hopxService } from '../services/hopx';
-import toast from 'react-hot-toast';
+import { showToast as toast } from '../utils/toast';
 import { createDefaultDocumentation } from '../utils/defaultDocumentation';
 import { recordOnboardingEvent, clearOnboardingEvents } from '../utils/onboardingMetrics';
 import { fetchWithTimeout } from '../utils/fetchWithTimeout';
@@ -201,10 +201,7 @@ export const useNotesStore = create<NotesStore>((set, get) => ({
       }
     } else {
       // DISABLING cloud execution - destroy sandbox
-      toast('Cloud execution disabled', {
-        duration: 4000,
-        icon: 'ℹ️',
-      });
+      toast.custom('ℹ️ Cloud execution disabled', { duration: 4000 });
 
       // Optionally destroy sandbox to free resources (background operation)
       try {
@@ -392,7 +389,7 @@ export const useNotesStore = create<NotesStore>((set, get) => ({
         globalTerminalStatus: 'error',
         globalTerminalSessionId: null
       });
-      toast.error('Unable to start terminal. Please try again.');
+      toast.error('Unable to establish cloud connection to sandbox environment.');
     } finally {
       isInitializingTerminalSession = false;
     }

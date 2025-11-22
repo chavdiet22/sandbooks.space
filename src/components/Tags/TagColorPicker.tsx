@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import toast from 'react-hot-toast';
+import { showToast as toast } from '../../utils/toast';
 import type { TagColor } from '../../types/tags.types';
 import { TAG_COLORS } from '../../utils/tagColors';
 import { useNotesStore } from '../../store/notesStore';
@@ -124,14 +124,8 @@ export const TagColorPicker: React.FC<TagColorPickerProps> = ({
 
     // Show success toast
     toast.success(`Tag color updated`, {
-      icon: '🎨',
       duration: 2000,
       position: 'bottom-center',
-      style: {
-        background: 'rgba(0, 0, 0, 0.8)',
-        color: '#fff',
-        backdropFilter: 'blur(12px)',
-      },
     });
 
     // Close picker
@@ -226,9 +220,8 @@ export const TagColorPicker: React.FC<TagColorPickerProps> = ({
                 key={color}
                 onClick={() => handleColorSelect(color)}
                 onKeyDown={(e) => handleKeyDown(e, color)}
-                aria-label={`Select ${getColorName(color)} color${
-                  isSelected ? ' (current)' : ''
-                }`}
+                aria-label={`Select ${getColorName(color)} color${isSelected ? ' (current)' : ''
+                  }`}
                 aria-pressed={isSelected}
                 className={`
                   relative w-8 h-8 rounded-md
@@ -236,10 +229,9 @@ export const TagColorPicker: React.FC<TagColorPickerProps> = ({
                   border-2 transition-all duration-200
                   hover:scale-105 hover:shadow-lg
                   focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-blue-600 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-stone-900
-                  ${
-                    isSelected
-                      ? 'border-blue-600 dark:border-blue-500 ring-2 ring-blue-600/30'
-                      : 'border-transparent hover:border-stone-300 dark:hover:border-stone-600'
+                  ${isSelected
+                    ? 'border-blue-600 dark:border-blue-500 ring-2 ring-blue-600/30'
+                    : 'border-transparent hover:border-stone-300 dark:hover:border-stone-600'
                   }
                 `}
                 style={{

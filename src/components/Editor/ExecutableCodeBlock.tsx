@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { hopxService } from '../../services/hopx';
 import type { Language, ExecutionResult } from '../../types';
 import { useNotesStore } from '../../store/notesStore';
-import toast from 'react-hot-toast';
+import { showToast as toast } from '../../utils/toast';
 import clsx from 'clsx';
 import { VscClearAll } from 'react-icons/vsc';
 import { LanguageIcon } from './LanguageIcon';

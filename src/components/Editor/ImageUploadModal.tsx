@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
-import toast from 'react-hot-toast';
+import { showToast as toast } from '../../utils/toast';
 
 interface ImageUploadModalProps {
   onInsert: (src: string) => void;

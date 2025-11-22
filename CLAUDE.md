@@ -246,3 +246,4 @@ Example: `feat(editor): add syntax highlighting toggle`
 
 See CONTRIBUTING.md for detailed guidelines.
 - remember to always run lint -> build -> test:coverage (with code coverage >=80%)
+- no code modification should exist wihout full lint -> build -> test before claiming completion. if anything fails in this phases, such as test requiring updates, it is not enough to only rerun tests, but you need to rerun linting first, then build all, then test all with the expected test coverage threshold (>=80%)
