@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, act } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { QuakeTerminal } from './QuakeTerminal';
 import { useNotesStore } from '../../store/notesStore';
@@ -348,7 +348,7 @@ describe('QuakeTerminal', () => {
             expect(mockToggleTerminal).toHaveBeenCalled();
         });
 
-        it('should close on Escape when terminal is open', () => {
+        it('should close on Escape when terminal is open', async () => {
             vi.useFakeTimers();
             (useNotesStore as unknown as ReturnType<typeof vi.fn>).mockReturnValue({
                 isTerminalOpen: true,
@@ -363,12 +363,14 @@ describe('QuakeTerminal', () => {
 
             render(<QuakeTerminal />);
 
-            // Simulate Escape
-            const event = new KeyboardEvent('keydown', { key: 'Escape' });
-            window.dispatchEvent(event);
+            // Simulate Escape and advance timers in act()
+            await act(async () => {
+                const event = new KeyboardEvent('keydown', { key: 'Escape' });
+                window.dispatchEvent(event);
 
-            // Advance timers by 300ms to account for animation
-            vi.advanceTimersByTime(300);
+                // Advance timers by 300ms to account for animation
+                vi.advanceTimersByTime(300);
+            });
 
             // Should trigger close (which calls toggleTerminal)
             expect(mockToggleTerminal).toHaveBeenCalled();

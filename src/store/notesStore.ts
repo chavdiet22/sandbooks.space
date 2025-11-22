@@ -10,6 +10,7 @@ import { hopxService } from '../services/hopx';
 import toast from 'react-hot-toast';
 import { createDefaultDocumentation } from '../utils/defaultDocumentation';
 import { recordOnboardingEvent, clearOnboardingEvents } from '../utils/onboardingMetrics';
+import { fetchWithTimeout } from '../utils/fetchWithTimeout';
 
 // Initialize dark mode from localStorage or system preference
 const initDarkMode = (): boolean => {
@@ -160,7 +161,7 @@ export const useNotesStore = create<NotesStore>((set, get) => ({
 
       try {
         // Force recreate sandbox (get fresh environment)
-        const response = await fetch(`${API_BASE_URL}/api/sandbox/recreate`, {
+        const response = await fetchWithTimeout(`${API_BASE_URL}/api/sandbox/recreate`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -207,7 +208,7 @@ export const useNotesStore = create<NotesStore>((set, get) => ({
 
       // Optionally destroy sandbox to free resources (background operation)
       try {
-        await fetch(`${API_BASE_URL}/api/sandbox/destroy`, {
+        await fetchWithTimeout(`${API_BASE_URL}/api/sandbox/destroy`, {
           method: 'POST',
           headers: AUTH_HEADERS,
         });
@@ -366,7 +367,7 @@ export const useNotesStore = create<NotesStore>((set, get) => ({
     try {
       isInitializingTerminalSession = true;
 
-      const response = await fetch(`${API_BASE_URL}/api/terminal/sessions`, {
+      const response = await fetchWithTimeout(`${API_BASE_URL}/api/terminal/sessions`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -530,7 +531,7 @@ export const useNotesStore = create<NotesStore>((set, get) => ({
 
   checkSandboxHealth: async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/sandbox/health`, {
+      const response = await fetchWithTimeout(`${API_BASE_URL}/api/sandbox/health`, {
         headers: AUTH_HEADERS,
       });
       const data = await response.json();
@@ -567,7 +568,7 @@ export const useNotesStore = create<NotesStore>((set, get) => ({
 
     // Light-weight health probe
     try {
-      const response = await fetch(`${API_BASE_URL}/api/sandbox/health`);
+      const response = await fetchWithTimeout(`${API_BASE_URL}/api/sandbox/health`);
       const data = await response.json();
 
       if (data.health?.isHealthy) {
@@ -590,7 +591,7 @@ export const useNotesStore = create<NotesStore>((set, get) => ({
     });
 
     try {
-      const response = await fetch(`${API_BASE_URL}/api/sandbox/recreate`, {
+      const response = await fetchWithTimeout(`${API_BASE_URL}/api/sandbox/recreate`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -623,6 +624,17 @@ export const useNotesStore = create<NotesStore>((set, get) => ({
       return true;
     } catch (error) {
       console.error('[Sandbooks] Auto-heal failed', error);
+
+      // Check if error is circuit breaker related
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      const isCircuitBreakerOpen = errorMessage.toLowerCase().includes('circuit breaker');
+
+      if (isCircuitBreakerOpen) {
+        toast.error('Cloud connection temporarily unavailable. Please wait a moment and try again.', {
+          duration: 5000,
+        });
+      }
+
       set({
         sandboxStatus: 'unhealthy',
         isCreatingSandbox: false,
@@ -639,7 +651,7 @@ export const useNotesStore = create<NotesStore>((set, get) => ({
     });
 
     try {
-      const response = await fetch(`${API_BASE_URL}/api/sandbox/recreate`, {
+      const response = await fetchWithTimeout(`${API_BASE_URL}/api/sandbox/recreate`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -749,9 +761,14 @@ export const useNotesStore = create<NotesStore>((set, get) => ({
         },
       });
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Execution failed';
+      const isCircuitBreakerOpen = errorMessage.toLowerCase().includes('circuit breaker');
+
       get().updateCodeBlock(noteId, blockId, {
         output: {
-          error: error instanceof Error ? error.message : 'Execution failed',
+          error: isCircuitBreakerOpen
+            ? 'Cloud connection temporarily unavailable. Please wait a moment and try again.'
+            : errorMessage,
           exitCode: 1,
         },
       });

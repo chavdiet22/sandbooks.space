@@ -251,6 +251,9 @@ describe('TerminalEmulator', () => {
         it('should handle reconnection on error', async () => {
             vi.useFakeTimers(); // Use fake timers ONLY for this test to control reconnection delay
 
+            // Suppress console.error for this test since it's expected
+            const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
             render(
                 <TerminalEmulator
                     sessionId="test-session"
@@ -271,6 +274,7 @@ describe('TerminalEmulator', () => {
 
             expect(terminalService.connectStream).toHaveBeenCalledTimes(2);
 
+            consoleErrorSpy.mockRestore();
             vi.useRealTimers();
         });
     });

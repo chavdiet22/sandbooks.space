@@ -8,10 +8,16 @@ import { getErrorCode, getErrorMessage } from '../utils/errorUtils';
 
 // Health check configuration
 const HEALTH_CHECK_CONFIG = {
-  CACHE_DURATION_MS: 30000,      // 30 seconds cache
+  CACHE_DURATION_MS: 10000,      // 10 seconds cache (reduced from 30s for faster expiry detection)
   SANDBOX_TIMEOUT_SECONDS: 3600, // 1 hour auto-kill
   EXPIRY_BUFFER_MS: 5 * 60 * 1000, // Refresh 5 minutes before expiry
-  RETRY_DELAYS_MS: [2000, 5000]  // 2s, 5s between retries
+  RETRY_DELAYS_MS: [1000, 2000]  // 1s, 2s between retries (reduced from 2s, 5s for faster recovery)
+};
+
+// Circuit breaker configuration
+const CIRCUIT_BREAKER_CONFIG = {
+  MAX_CONSECUTIVE_FAILURES: 3,    // Open circuit after 3 consecutive failures
+  RECOVERY_TIMEOUT_MS: 30000,     // Try recovery after 30s in OPEN state
 };
 
 // Error classification
@@ -29,9 +35,74 @@ class HopxService {
   private sandboxId: string | null = null;
   private sandboxCreatedAt: number | null = null;
 
+  // Circuit breaker state
+  private consecutiveFailures: number = 0;
+  private circuitState: 'CLOSED' | 'OPEN' | 'HALF_OPEN' = 'CLOSED';
+  private circuitOpenedAt: number | null = null;
+
   constructor() {
     this.apiKey = env.HOPX_API_KEY;
     logger.info('Hopx Service initialized');
+  }
+
+  /**
+   * Check circuit breaker state and throw if circuit is OPEN
+   */
+  private checkCircuitBreaker(): void {
+    if (this.circuitState === 'OPEN') {
+      const now = Date.now();
+      const timeSinceOpen = now - (this.circuitOpenedAt || now);
+
+      // Allow retry after recovery timeout
+      if (timeSinceOpen >= CIRCUIT_BREAKER_CONFIG.RECOVERY_TIMEOUT_MS) {
+        logger.info('Circuit breaker entering HALF_OPEN state for recovery attempt');
+        this.circuitState = 'HALF_OPEN';
+        return;
+      }
+
+      logger.warn('Circuit breaker is OPEN - refusing connection attempts', {
+        consecutiveFailures: this.consecutiveFailures,
+        timeSinceOpen: `${Math.round(timeSinceOpen / 1000)}s`
+      });
+      throw new HopxError('Cloud connection unavailable - circuit breaker OPEN. Please try again in a moment.');
+    }
+  }
+
+  /**
+   * Record successful operation - reset circuit breaker
+   */
+  private recordSuccess(): void {
+    if (this.consecutiveFailures > 0 || this.circuitState !== 'CLOSED') {
+      logger.info('Operation successful - resetting circuit breaker', {
+        previousState: this.circuitState,
+        previousFailures: this.consecutiveFailures
+      });
+    }
+    this.consecutiveFailures = 0;
+    this.circuitState = 'CLOSED';
+    this.circuitOpenedAt = null;
+  }
+
+  /**
+   * Record failed operation - increment failure counter and open circuit if threshold exceeded
+   */
+  private recordFailure(): void {
+    this.consecutiveFailures++;
+
+    if (this.consecutiveFailures >= CIRCUIT_BREAKER_CONFIG.MAX_CONSECUTIVE_FAILURES) {
+      this.circuitState = 'OPEN';
+      this.circuitOpenedAt = Date.now();
+
+      logger.error('Circuit breaker OPEN - too many consecutive failures', {
+        consecutiveFailures: this.consecutiveFailures,
+        maxAllowed: CIRCUIT_BREAKER_CONFIG.MAX_CONSECUTIVE_FAILURES
+      });
+    } else {
+      logger.warn('Operation failed - incrementing failure counter', {
+        consecutiveFailures: this.consecutiveFailures,
+        maxAllowed: CIRCUIT_BREAKER_CONFIG.MAX_CONSECUTIVE_FAILURES
+      });
+    }
   }
 
   /**
@@ -93,9 +164,12 @@ class HopxService {
 
   /**
    * Get a healthy sandbox, creating or recreating as needed
-   * Uses 30s health check cache to minimize overhead
+   * Uses 10s health check cache to minimize overhead
    */
   private async getHealthySandbox(): Promise<HopxSandbox> {
+    // Check circuit breaker before attempting any operations
+    this.checkCircuitBreaker();
+
     try {
       // Step 1: No sandbox exists - create new one
       if (!this.sandbox) {
@@ -213,13 +287,23 @@ class HopxService {
    * Create a new sandbox instance
    */
   private async createSandbox(): Promise<HopxSandbox> {
-    const { sandbox, sandboxId } = await this.createSandboxInstance();
-    const now = Date.now();
-    this.sandbox = sandbox;
-    this.sandboxId = sandboxId;
-    this.lastHealthCheck = now;
-    this.sandboxCreatedAt = now;
-    return this.sandbox;
+    try {
+      const { sandbox, sandboxId } = await this.createSandboxInstance();
+      const now = Date.now();
+      this.sandbox = sandbox;
+      this.sandboxId = sandboxId;
+      this.lastHealthCheck = now;
+      this.sandboxCreatedAt = now;
+
+      // Record successful sandbox creation
+      this.recordSuccess();
+
+      return this.sandbox;
+    } catch (error) {
+      // Record failure - this will increment consecutive failures
+      this.recordFailure();
+      throw error;
+    }
   }
 
   /**
@@ -373,6 +457,9 @@ class HopxService {
           }))
         : [];
 
+      // Record successful execution
+      this.recordSuccess();
+
       return {
         stdout: result.stdout || '',
         stderr: result.stderr || '',
@@ -401,19 +488,22 @@ class HopxService {
         sandboxId: this.sandboxId
       });
 
-      // If error indicates sandbox corruption/expiry/auth issues, force sandbox recreation
+      // If error indicates sandbox corruption/expiry/auth issues, reset state and fail fast (no retry)
+      // The next call to getHealthySandbox will handle recreation
       if (['corruption', 'auth', 'expired'].includes(classified.category)) {
-        logger.warn('Error indicates sandbox needs recreation', {
+        logger.warn('Error indicates sandbox needs recreation - failing fast without retry', {
           category: classified.category
         });
         this.resetSandboxState();
+        this.recordFailure(); // Record failure for circuit breaker
+        throw error; // Fail fast - no retries for sandbox-level errors
       }
 
-      // Retry logic
+      // Retry logic for transient errors only (network, timeout, unknown)
       if (attempt < maxAttempts - 1 && classified.recoverable) {
         const delay = HEALTH_CHECK_CONFIG.RETRY_DELAYS_MS[attempt];
 
-        logger.info('Retrying execution', {
+        logger.info('Retrying execution for transient error', {
           attempt: attempt + 2,
           delay: `${delay}ms`,
           category: classified.category
@@ -427,6 +517,7 @@ class HopxService {
       }
 
       // All retries exhausted or non-recoverable error
+      this.recordFailure(); // Record failure for circuit breaker
       throw error;
     }
   }
@@ -549,12 +640,22 @@ class HopxService {
       avgDuration: number;
     } | null;
     error?: string;
+    circuitBreaker?: {
+      state: string;
+      consecutiveFailures: number;
+      maxFailures: number;
+    };
   }> {
     if (!this.sandbox) {
       return {
         status: 'no_sandbox',
         isHealthy: false,
-        message: 'No sandbox exists'
+        message: 'No sandbox exists',
+        circuitBreaker: {
+          state: this.circuitState,
+          consecutiveFailures: this.consecutiveFailures,
+          maxFailures: CIRCUIT_BREAKER_CONFIG.MAX_CONSECUTIVE_FAILURES
+        }
       };
     }
 
@@ -575,14 +676,24 @@ class HopxService {
           errors: metrics.error_count ?? 0,
           errorRate: (metrics.error_count ?? 0) / Math.max(metrics.requests_total ?? 1, 1),
           avgDuration: metrics.avg_duration_ms ?? 0
-        } : null
+        } : null,
+        circuitBreaker: {
+          state: this.circuitState,
+          consecutiveFailures: this.consecutiveFailures,
+          maxFailures: CIRCUIT_BREAKER_CONFIG.MAX_CONSECUTIVE_FAILURES
+        }
       };
     } catch (error: unknown) {
       logger.error('Failed to get health', { error: getErrorMessage(error) });
       return {
         status: 'unknown',
         isHealthy: false,
-        error: getErrorMessage(error)
+        error: getErrorMessage(error),
+        circuitBreaker: {
+          state: this.circuitState,
+          consecutiveFailures: this.consecutiveFailures,
+          maxFailures: CIRCUIT_BREAKER_CONFIG.MAX_CONSECUTIVE_FAILURES
+        }
       };
     }
   }

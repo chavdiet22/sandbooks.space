@@ -1,5 +1,6 @@
 // Backend API integration for code execution
 import type { ExecutionResult, Language } from '../types';
+import { fetchWithTimeout } from '../utils/fetchWithTimeout';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 const API_TOKEN = import.meta.env.VITE_API_TOKEN;
@@ -13,7 +14,7 @@ class HopxService {
     const startTime = Date.now();
 
     try {
-      const response = await fetch(`${API_BASE_URL}/api/execute`, {
+      const response = await fetchWithTimeout(`${API_BASE_URL}/api/execute`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

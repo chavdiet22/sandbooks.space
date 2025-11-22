@@ -245,3 +245,4 @@ Example: `feat(editor): add syntax highlighting toggle`
 6. Submit PR
 
 See CONTRIBUTING.md for detailed guidelines.
+- remember to always run lint -> build -> test:coverage (with code coverage >=80%)

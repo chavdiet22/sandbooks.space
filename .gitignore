@@ -104,3 +104,6 @@ docs/archive/
 
 # docs not needed, we focus on living docs within app
 docs/
+
+#git
+COMMIT_MESSAGE.txt
