@@ -492,7 +492,7 @@ export function createDefaultDocumentation(): Note[] {
         {
           type: 'bulletList',
           content: [
-            { type: 'listItem', content: [{ type: 'paragraph', content: [{ type: 'text', marks: [{ type: 'bold' }], text: 'Typewriter Mode' }, { type: 'text', text: ': ' }, { type: 'text', marks: [{ type: 'code' }], text: 'Cmd+Alt+T' }, { type: 'text', text: ' keeps cursor centered vertically' }] }] },
+            { type: 'listItem', content: [{ type: 'paragraph', content: [{ type: 'text', marks: [{ type: 'bold' }], text: 'Typewriter Mode' }, { type: 'text', text: ': ' }, { type: 'text', marks: [{ type: 'code' }], text: 'Cmd+Alt+T' }, { type: 'text', text: ' automatically scrolls to keep your cursor centered vertically while typing. Perfect for long documents - you never need to manually scroll!' }] }] },
             { type: 'listItem', content: [{ type: 'paragraph', content: [{ type: 'text', marks: [{ type: 'bold' }], text: 'Focus Mode' }, { type: 'text', text: ': ' }, { type: 'text', marks: [{ type: 'code' }], text: 'Cmd+Alt+F' }, { type: 'text', text: ' dims everything except the active paragraph' }] }] },
             { type: 'listItem', content: [{ type: 'paragraph', content: [{ type: 'text', marks: [{ type: 'bold' }], text: 'Dark Mode' }, { type: 'text', text: ': Click the moon icon in the top right' }] }] },
           ],

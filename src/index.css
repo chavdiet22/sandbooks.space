@@ -272,15 +272,18 @@ ul[data-type="taskList"] li[data-checked="true"]>div {
   animation: shake 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
 }
 
-/* Focus Mode - Dim non-active paragraphs for concentration */
+/* Focus Mode - Dim non-active paragraphs for concentration
+   Creates a clear visual hierarchy: active block is fully visible,
+   while other blocks are subtly dimmed to reduce distraction */
 .focus-mode-dimmed {
-  opacity: 0.3;
-  transition: opacity 200ms ease-in-out;
+  opacity: 0.25;
+  transition: opacity 300ms cubic-bezier(0.4, 0, 0.2, 1);
+  pointer-events: none; /* Prevent interaction with dimmed content */
 }
 
-/* Dark mode focus mode - slightly higher opacity for legibility */
+/* Dark mode focus mode - slightly higher opacity for better legibility in dark theme */
 .dark .focus-mode-dimmed {
-  opacity: 0.35;
+  opacity: 0.3;
 }
 
 /* ====================================================================

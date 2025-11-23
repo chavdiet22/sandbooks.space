@@ -36,62 +36,72 @@ export const FocusMode = Extension.create<FocusModeOptions>({
           init() {
             return DecorationSet.empty;
           },
-          apply(tr, decorationSet, oldState, newState) {
+          apply(tr, _decorationSet, oldState, newState) {
             // Only update decorations if focus mode is enabled
             if (!isEnabled()) {
               return DecorationSet.empty;
             }
 
-            // Only update if selection changed or document changed
+            // Check if selection changed or document changed
             const selectionChanged = !oldState.selection.eq(newState.selection);
             const docChanged = !oldState.doc.eq(newState.doc);
+            const focusModeToggled = tr.getMeta('focusModeUpdate') === true;
 
-            if (!selectionChanged && !docChanged) {
-              return decorationSet.map(tr.mapping, tr.doc);
+            // Only recalculate if something relevant changed
+            if (!selectionChanged && !docChanged && !focusModeToggled) {
+              // Return existing decorations if nothing changed
+              return _decorationSet.map(tr.mapping, tr.doc);
             }
 
-            // Find the current active block (paragraph, heading, etc.)
+            // Find the current active block (paragraph, heading, list item, etc.)
             const { $from } = newState.selection;
-            const currentBlockPos = $from.before($from.depth);
-
-            // Get the current block node
-            const currentBlockNode = $from.node($from.depth);
-            const currentBlockEnd = currentBlockPos + currentBlockNode.nodeSize;
+            
+            // Find the top-level block that contains the cursor
+            // We want to highlight the immediate child of the document
+            let activeBlockStart = -1;
+            
+            // Walk up the node tree to find the top-level block (direct child of doc)
+            for (let depth = $from.depth; depth >= 0; depth--) {
+              const node = $from.node(depth);
+              // Check if this is a block-level node and is a direct child of doc
+              if (node.isBlock && depth === 1) {
+                activeBlockStart = $from.start(depth);
+                break;
+              }
+            }
+            
+            // Fallback: if no block found, use the document position
+            if (activeBlockStart === -1) {
+              activeBlockStart = 0;
+            }
 
             const decorations: Decoration[] = [];
 
-            // Traverse all top-level blocks
-            newState.doc.descendants((node, pos, parent) => {
-              // Only process top-level blocks (direct children of doc)
-              if (parent !== newState.doc) {
-                return true; // Continue traversal into children
+            // Traverse all top-level blocks (direct children of doc)
+            newState.doc.forEach((node, offset) => {
+              // Skip the document node itself
+              if (node.type.name === 'doc') {
+                return;
               }
 
-              // Skip the current active block
-              const blockStart = pos;
-              const blockEnd = pos + node.nodeSize;
+              const blockStart = offset;
+              const blockEnd = offset + node.nodeSize;
 
-              // Check if this is the active block
+              // Check if this block contains the cursor
+              // The active block is the one where the cursor position falls within its range
               const isActiveBlock = (
-                blockStart <= currentBlockPos &&
-                blockEnd >= currentBlockEnd
+                activeBlockStart >= blockStart &&
+                activeBlockStart < blockEnd
               );
 
-              if (isActiveBlock) {
-                return false; // Skip this block, don't dim it
-              }
-
-              // Apply dimming decoration to non-active blocks
-              // Use inline decorations for all node types
-              if (node.isBlock && node.type.name !== 'doc') {
+              // Only dim non-active blocks
+              if (!isActiveBlock && node.isBlock) {
                 decorations.push(
                   Decoration.node(blockStart, blockEnd, {
                     class: 'focus-mode-dimmed',
                   })
                 );
               }
-
-              return false; // Don't traverse into children
             });
 
             return DecorationSet.create(newState.doc, decorations);

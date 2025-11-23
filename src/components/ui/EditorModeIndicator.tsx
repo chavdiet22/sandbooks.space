@@ -13,7 +13,7 @@ import clsx from 'clsx';
  *
  * Interaction:
  * - Click to toggle mode directly
- * - Keyboard shortcuts still work (⌘⇧T, ⌘⇧F)
+ * - Keyboard shortcuts still work (⌘⌥T, ⌘⌥F)
  * - Hover shows label
  * - No visual clutter when disabled
  */
@@ -60,8 +60,8 @@ export const EditorModeIndicator = () => {
             // GPU acceleration
             'will-change-transform'
           )}
-          title="Typewriter mode active (⌘⇧T to toggle)"
-          aria-label="Typewriter mode active. Click to disable."
+          title="Typewriter mode active (⌘⌥T to toggle) - Keeps cursor centered while typing"
+          aria-label="Typewriter mode active. Automatically scrolls to keep cursor centered vertically while typing. Click to disable."
         >
           {/* Gradient overlay for depth */}
           <div
