@@ -1,129 +1,17 @@
 import { useEffect, useMemo } from 'react';
 import { useNotesStore } from '../../store/notesStore';
 import { formatShortcut } from '../../utils/platform';
-
-interface Shortcut {
-  keys: string[]; // Array of keys to format (e.g., ['mod', 'shift', 'k'])
-  action: string;
-  rawKey?: string; // Optional: Override display (e.g., '- Space')
-}
-
-interface ShortcutCategory {
-  category: string;
-  shortcuts: Shortcut[];
-}
-
-// Web-safe keyboard shortcuts (no browser/OS conflicts)
-const shortcutDefinitions: ShortcutCategory[] = [
-  {
-    category: 'Notes & Navigation',
-    shortcuts: [
-      { keys: ['c'], action: 'Create new note (when not typing)' },
-      { keys: ['/'], action: 'Search notes (when not typing)' },
-      { keys: ['mod', 'k'], action: 'Search notes (Cmd+K / Ctrl+K)' },
-      { keys: ['mod', 'b'], action: 'Toggle sidebar (when not in editor)' },
-      { keys: ['mod', '`'], action: 'Toggle terminal' },
-      { keys: ['mod', 'shift', 't'], action: 'Toggle typewriter mode' },
-      { keys: ['mod', 'shift', 'f'], action: 'Toggle focus mode' },
-    ],
-  },
-  {
-    category: 'Text Formatting',
-    shortcuts: [
-      { keys: ['mod', 'b'], action: 'Bold (in editor)' },
-      { keys: ['mod', 'i'], action: 'Italic' },
-      { keys: ['mod', 'u'], action: 'Underline' },
-      { keys: ['mod', 'shift', 's'], action: 'Strikethrough' },
-      { keys: ['mod', 'shift', 'h'], action: 'Highlight' },
-      { keys: ['mod', 'k'], action: 'Insert link (in editor)' },
-    ],
-  },
-  {
-    category: 'Block Formatting',
-    shortcuts: [
-      { keys: ['mod', 'shift', 'b'], action: 'Blockquote' },
-      { keys: ['mod', 'shift', '8'], action: 'Bullet list' },
-      { keys: ['mod', 'shift', '7'], action: 'Numbered list' },
-      { keys: ['mod', 'shift', '9'], action: 'Task list' },
-      { keys: ['mod', 'alt', 'c'], action: 'Insert code block' },
-    ],
-  },
-  {
-    category: 'Block Transformations',
-    shortcuts: [
-      { keys: ['mod', 'alt', '1'], action: 'Convert to Heading 1' },
-      { keys: ['mod', 'alt', '2'], action: 'Convert to Heading 2' },
-      { keys: ['mod', 'alt', '3'], action: 'Convert to Heading 3' },
-      { keys: ['mod', 'alt', '0'], action: 'Convert to paragraph' },
-    ],
-  },
-  {
-    category: 'Smart Writing',
-    shortcuts: [
-      { keys: ['shift', 'enter'], action: 'New paragraph (24px spacing)' },
-      { keys: ['enter'], action: 'Line break (minimal spacing)' },
-      { keys: ['mod', 'shift', 'k'], action: 'Delete current line' },
-      { keys: ['mod', 'shift', 'd'], action: 'Duplicate current line' },
-      { keys: ['mod', ']'], action: 'Increase indent' },
-      { keys: ['mod', '['], action: 'Decrease indent' },
-    ],
-  },
-  {
-    category: 'Slash Commands',
-    shortcuts: [
-      { rawKey: '/', keys: [], action: 'Open command menu' },
-      { rawKey: '/h1 /h2 /h3', keys: [], action: 'Insert heading' },
-      { rawKey: '/bullet /number', keys: [], action: 'Insert list' },
-      { rawKey: '/todo', keys: [], action: 'Insert task list' },
-      { rawKey: '/code', keys: [], action: 'Insert code block' },
-      { rawKey: '/quote', keys: [], action: 'Insert blockquote' },
-      { rawKey: '/hr', keys: [], action: 'Insert divider' },
-    ],
-  },
-  {
-    category: 'Markdown Shortcuts',
-    shortcuts: [
-      { rawKey: '- Space', keys: [], action: 'Start bullet list' },
-      { rawKey: '1. Space', keys: [], action: 'Start numbered list' },
-      { rawKey: '[ ] Space', keys: [], action: 'Start task list' },
-      { rawKey: '> Space', keys: [], action: 'Start blockquote' },
-      { rawKey: '# Space', keys: [], action: 'Create heading (# to ######)' },
-      { rawKey: '---', keys: [], action: 'Insert horizontal rule' },
-    ],
-  },
-  {
-    category: 'List Navigation',
-    shortcuts: [
-      { keys: ['tab'], action: 'Indent (nest) list item' },
-      { keys: ['shift', 'tab'], action: 'Outdent (unnest) list item' },
-      { keys: ['enter'], action: 'Continue list / Exit on empty item' },
-      { keys: ['backspace'], action: 'Convert to paragraph at start of list' },
-    ],
-  },
-  {
-    category: 'Code Execution',
-    shortcuts: [
-      { keys: ['mod', 'enter'], action: 'Run code block (when focused)' },
-      { keys: ['mod', 'shift', 'c'], action: 'Clear code output' },
-    ],
-  },
-  {
-    category: 'General',
-    shortcuts: [
-      { rawKey: '?', keys: [], action: 'Show/hide keyboard shortcuts (when not typing)' },
-      { keys: ['escape'], action: 'Close dialog/modal' },
-    ],
-  },
-];
+import { getShortcutsByCategory } from '../../constants/shortcuts';
 
 export const KeyboardShortcuts = () => {
   const { isShortcutsOpen, toggleShortcuts } = useNotesStore();
 
   // Format shortcuts dynamically based on OS
   const shortcuts = useMemo(() => {
-    return shortcutDefinitions.map(category => ({
-      ...category,
-      shortcuts: category.shortcuts.map(shortcut => ({
+    const categories = getShortcutsByCategory();
+    return Object.entries(categories).map(([category, items]) => ({
+      category,
+      shortcuts: items.map(shortcut => ({
         ...shortcut,
         displayKey: shortcut.rawKey || formatShortcut(shortcut.keys),
       })),

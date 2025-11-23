@@ -5,10 +5,11 @@ export type OnboardingEvent =
   | 'code_run'
   | 'search_opened'
   | 'tag_added'
-  | 'terminal_toggled'
+  | 'cloud_execution_toggled'
   | 'notes_exported'
   | 'notes_imported'
-  | 'cloud_execution_toggled'
+  | 'terminal_toggled'
+  | 'markdown_imported'
   | 'docs_reset';
 
 export interface OnboardingEventRecord {

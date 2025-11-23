@@ -109,6 +109,12 @@ npm start
 3. Write your code
 4. Click **"▶ Run"** to execute (requires cloud execution enabled)
 
+### Import & Export
+
+1. **Import Markdown**: Click the Sync icon in the header -> "Import Markdown Note" to load existing `.md` files.
+2. **Local Sync**: Click "Open Folder" in the sidebar to sync your notes directly with a folder on your computer.
+3. **Export**: Click "Export Notes" in the Sync menu to download all notes as JSON.
+
 ### Keyboard Shortcuts
 
 Press `?` to see all shortcuts, or use these common ones:
@@ -119,12 +125,14 @@ Press `?` to see all shortcuts, or use these common ones:
 - `?` - Show all shortcuts
 
 **Power User**:
+- `Cmd+Alt+N / Ctrl+Alt+N` - Create new note (Global)
 - `Cmd+K / Ctrl+K` - Search (VS Code style)
+- `Cmd+\ / Ctrl+\` - Toggle sidebar
+- `Ctrl+`` - Toggle terminal (Global)
 - `Cmd+Enter / Ctrl+Enter` - Run code block
 - `Cmd+B / Ctrl+B` - Bold
 - `Cmd+I / Ctrl+I` - Italic
 - `Cmd+U / Ctrl+U` - Underline
-- `Cmd+` / Ctrl+` ` - Toggle terminal
 
 ### Example Code
 

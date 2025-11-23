@@ -2,8 +2,9 @@ import { create } from 'zustand';
 import { nanoid } from 'nanoid';
 import type { NotesStore, Note } from '../types';
 import type { Tag, TagColor } from '../types/tags.types';
-// Terminal types removed - using global session state instead
-import { storageService } from '../services/storage';
+import { LocalStorageProvider } from '../services/LocalStorageProvider';
+import { FileSystemProvider } from '../services/FileSystemProvider';
+import { storageManager, storageService } from '../services/storageManager';
 import { extractTitleFromContent } from '../utils/titleExtraction';
 import { getNextTagColor } from '../utils/tagColors';
 import { hopxService } from '../services/hopx';
@@ -42,23 +43,6 @@ const AUTH_HEADERS = API_TOKEN ? { Authorization: `Bearer ${API_TOKEN}` } : unde
 // Global flag to prevent duplicate session initialization (React Strict Mode protection)
 let isInitializingTerminalSession = false;
 
-// Initialize notes with documentation on first launch
-const initNotesWithDocumentation = (): Note[] => {
-  const existingNotes = storageService.getNotes();
-
-  // Check if this is first launch (no notes + no first-run flag)
-  const hasRun = localStorage.getItem('sandbooks-first-run-complete');
-
-  if (existingNotes.length === 0 && hasRun !== 'true') {
-    const docNotes = createDefaultDocumentation();
-    storageService.saveNotes(docNotes);
-    localStorage.setItem('sandbooks-first-run-complete', 'true');
-    return docNotes;
-  }
-
-  return existingNotes;
-};
-
 // Normalize tags into the global tag list so color edits stay consistent
 const deriveTagsFromNotes = (notes: Note[]): Tag[] => {
   const byName = new Map<string, Tag>();
@@ -73,9 +57,10 @@ const deriveTagsFromNotes = (notes: Note[]): Tag[] => {
   return Array.from(byName.values());
 };
 
-const initialNotes = initNotesWithDocumentation();
-const initialTags = deriveTagsFromNotes(initialNotes);
-const initialActiveNoteId = initialNotes.length > 0 ? initialNotes[0].id : null;
+// Initialize with empty state - will load async after store creation
+const initialNotes: Note[] = [];
+const initialTags: Tag[] = [];
+const initialActiveNoteId: string | null = null;
 
 export const useNotesStore = create<NotesStore>((set, get) => ({
   notes: initialNotes,
@@ -103,55 +88,97 @@ export const useNotesStore = create<NotesStore>((set, get) => ({
   isCreatingSandbox: false,
   syncStatus: 'synced',
   lastSyncedAt: null,
+  storageType: 'localStorage',
+  storageName: 'Local Storage',
 
   addNote: (note: Note) => {
     set((state) => {
       const newNotes = [...state.notes, note];
-      storageService.saveNotes(newNotes);
+
+      set({ syncStatus: 'saving' });
+
+      storageManager.saveNote(note)
+        .then(() => {
+          set({
+            syncStatus: 'synced',
+            lastSyncedAt: new Date().toISOString()
+          });
+        })
+        .catch(err => {
+          console.error('Failed to save note:', err);
+          toast.error('Failed to save note');
+          set({ syncStatus: 'error' });
+        });
+
       return {
         notes: newNotes,
-        activeNoteId: note.id,
-        syncStatus: 'synced',
-        lastSyncedAt: new Date().toISOString()
+        activeNoteId: note.id
       };
     });
   },
 
   updateNote: (id: string, updates: Partial<Note>) => {
     set((state) => {
+      let updatedNote: Note | undefined;
       const newNotes = state.notes.map((note) => {
         if (note.id === id) {
-          // If content is being updated, auto-compute title from first line
           const updatedContent = updates.content || note.content;
           const computedTitle = extractTitleFromContent(updatedContent);
 
-          return {
+          updatedNote = {
             ...note,
             ...updates,
             title: computedTitle,
             updatedAt: new Date().toISOString()
           };
+          return updatedNote;
         }
         return note;
       });
-      storageService.saveNotes(newNotes);
-      return {
-        notes: newNotes,
-        syncStatus: 'synced',
-        lastSyncedAt: new Date().toISOString()
-      };
+
+      if (updatedNote) {
+        set({ syncStatus: 'saving' });
+
+        storageManager.saveNote(updatedNote)
+          .then(() => {
+            set({
+              syncStatus: 'synced',
+              lastSyncedAt: new Date().toISOString()
+            });
+          })
+          .catch(err => {
+            console.error('Failed to update note:', err);
+            toast.error('Failed to save changes');
+            set({ syncStatus: 'error' });
+          });
+      }
+
+      return { notes: newNotes };
     });
   },
 
   deleteNote: (id: string) => {
     set((state) => {
       const newNotes = state.notes.filter((note) => note.id !== id);
-      storageService.saveNotes(newNotes);
+
+      set({ syncStatus: 'saving' });
+
+      storageManager.deleteNote(id)
+        .then(() => {
+          set({
+            syncStatus: 'synced',
+            lastSyncedAt: new Date().toISOString()
+          });
+        })
+        .catch(err => {
+          console.error('Failed to delete note:', err);
+          toast.error('Failed to delete note');
+          set({ syncStatus: 'error' });
+        });
+
       return {
         notes: newNotes,
-        activeNoteId: state.activeNoteId === id ? null : state.activeNoteId,
-        syncStatus: 'synced',
-        lastSyncedAt: new Date().toISOString()
+        activeNoteId: state.activeNoteId === id ? null : state.activeNoteId
       };
     });
   },
@@ -256,29 +283,47 @@ export const useNotesStore = create<NotesStore>((set, get) => ({
     return storageService.exportNotes(notes);
   },
 
-  importNotes: (data: string) => {
-    const importedNotes = storageService.importNotes(data);
-    set((state) => {
-      // Merge imported notes with existing ones, avoiding duplicates
-      const existingIds = new Set(state.notes.map((n) => n.id));
-      const newNotes = importedNotes.filter((n) => !existingIds.has(n.id));
-      const allNotes = [...state.notes, ...newNotes];
-      storageService.saveNotes(allNotes);
-      recordOnboardingEvent('notes_imported', {
-        importedCount: importedNotes.length,
-        addedCount: newNotes.length,
-      });
-      return {
-        notes: allNotes,
-        syncStatus: 'synced',
-        lastSyncedAt: new Date().toISOString()
-      };
-    });
+  importNotes: (json: string) => {
+    try {
+      const data = JSON.parse(json);
+      if (Array.isArray(data)) {
+        set({ notes: data });
+        return true;
+      }
+      return false;
+    } catch (e) {
+      console.error('Failed to import notes', e);
+      return false;
+    }
+  },
+
+  importMarkdownNote: async (file: File) => {
+    const content = await file.text();
+    const newNote: Note = {
+      id: nanoid(),
+      title: file.name.replace('.md', ''),
+      content: {
+        type: 'doc',
+        content: [
+          {
+            type: 'paragraph',
+            content: [{ type: 'text', text: content }]
+          }
+        ]
+      },
+      tags: [],
+      codeBlocks: [],
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    set((state) => ({ notes: [...state.notes, newNote], activeNoteId: newNote.id }));
+    toast.success('Markdown note imported');
+    recordOnboardingEvent('markdown_imported');
   },
 
   resetOnboardingDocs: (options) => {
     const docs = createDefaultDocumentation();
-    storageService.saveNotes(docs);
+    storageService.saveAllNotes(docs);
     localStorage.setItem('sandbooks-first-run-complete', 'true');
     clearOnboardingEvents();
     set({
@@ -299,7 +344,7 @@ export const useNotesStore = create<NotesStore>((set, get) => ({
     const currentNotes = get().notes;
     if (currentNotes.length > 0) return;
     const docs = createDefaultDocumentation();
-    storageService.saveNotes(docs);
+    storageService.saveAllNotes(docs);
     localStorage.setItem('sandbooks-first-run-complete', 'true');
     set({
       notes: docs,
@@ -448,7 +493,7 @@ export const useNotesStore = create<NotesStore>((set, get) => ({
         ),
       }));
 
-      storageService.saveNotes(newNotes);
+      storageService.saveAllNotes(newNotes);
 
       return {
         tags: newTags,
@@ -465,7 +510,7 @@ export const useNotesStore = create<NotesStore>((set, get) => ({
         tags: note.tags?.filter((tag) => tag.id !== id) || [],
       }));
 
-      storageService.saveNotes(newNotes);
+      storageService.saveAllNotes(newNotes);
 
       return {
         tags: state.tags.filter((tag) => tag.id !== id),
@@ -496,7 +541,7 @@ export const useNotesStore = create<NotesStore>((set, get) => ({
         return note;
       });
 
-      storageService.saveNotes(newNotes);
+      storageService.saveAllNotes(newNotes);
       recordOnboardingEvent('tag_added', { noteId, tagName: tag.name });
 
       return {
@@ -519,7 +564,7 @@ export const useNotesStore = create<NotesStore>((set, get) => ({
         return note;
       });
 
-      storageService.saveNotes(newNotes);
+      storageService.saveAllNotes(newNotes);
 
       return { notes: newNotes };
     });
@@ -716,7 +761,7 @@ export const useNotesStore = create<NotesStore>((set, get) => ({
           : note
       ),
     }));
-    storageService.saveNotes(get().notes);
+    storageService.saveAllNotes(get().notes);
   },
 
   updateCodeBlock: (noteId, blockId, updates) => {
@@ -735,7 +780,7 @@ export const useNotesStore = create<NotesStore>((set, get) => ({
           : note
       ),
     }));
-    storageService.saveNotes(get().notes);
+    storageService.saveAllNotes(get().notes);
   },
 
   deleteCodeBlock: (noteId, blockId) => {
@@ -750,7 +795,7 @@ export const useNotesStore = create<NotesStore>((set, get) => ({
           : note
       ),
     }));
-    storageService.saveNotes(get().notes);
+    storageService.saveAllNotes(get().notes);
   },
 
   executeCodeBlock: async (noteId, blockId) => {
@@ -775,18 +820,93 @@ export const useNotesStore = create<NotesStore>((set, get) => ({
         },
       });
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Execution failed';
-      const isCircuitBreakerOpen = errorMessage.toLowerCase().includes('circuit breaker');
-
+      console.error('Execution failed:', error);
       get().updateCodeBlock(noteId, blockId, {
         output: {
-          error: isCircuitBreakerOpen
-            ? 'Cloud connection temporarily unavailable. Please wait a moment and try again.'
-            : errorMessage,
-          exitCode: 1,
+          error: error instanceof Error ? error.message : 'Execution failed',
         },
       });
-      throw error;
+    }
+  },
+
+  // Storage Provider Lifecycle Methods
+  getStorageInfo: () => storageManager.getMetadata(),
+
+  connectToLocalFolder: async () => {
+    try {
+      const fsProvider = new FileSystemProvider();
+      await fsProvider.connect();
+
+      set({ syncStatus: 'saving' });
+
+      // Load notes from the folder
+      const notes = await fsProvider.getNotes();
+
+      // Set as active provider
+      storageManager.setProvider(fsProvider);
+
+      set({
+        notes,
+        activeNoteId: notes[0]?.id || null,
+        tags: deriveTagsFromNotes(notes),
+        syncStatus: 'synced',
+        lastSyncedAt: new Date().toISOString(),
+        storageType: 'fileSystem',
+        storageName: fsProvider.metadata.name
+      });
+
+      toast.success(`Connected to ${fsProvider.metadata.name}`);
+    } catch (error) {
+      if ((error as Error).name === 'AbortError') {
+        // User cancelled folder picker
+        return;
+      }
+      console.error('Failed to connect to local folder:', error);
+      toast.error('Failed to connect to folder');
+      set({ syncStatus: 'error' });
+    }
+  },
+
+  // Disconnect and return to localStorage
+  disconnectFromLocalFolder: async () => {
+    const currentProvider = storageManager.getProvider();
+    if (currentProvider instanceof FileSystemProvider) {
+      await currentProvider.disconnect();
+      const localProvider = new LocalStorageProvider();
+      storageManager.setProvider(localProvider);
+
+      const notes = await localProvider.getNotes();
+
+      // If local storage is empty, ensure we have default docs or at least a clean state
+      if (notes.length === 0) {
+        // We can trigger the seed logic here to ensure the user isn't left in a void
+        // This matches the app initialization logic
+        const docs = createDefaultDocumentation();
+        await localProvider.saveAllNotes(docs);
+        localStorage.setItem('sandbooks-first-run-complete', 'true');
+
+        set({
+          notes: docs,
+          activeNoteId: docs[0]?.id || null,
+          tags: deriveTagsFromNotes(docs),
+          syncStatus: 'synced',
+          lastSyncedAt: new Date().toISOString(),
+          storageType: 'localStorage',
+          storageName: 'Local Storage'
+        });
+        toast.success('Disconnected from local folder. Loaded default notes.');
+      } else {
+        set({
+          notes,
+          activeNoteId: notes[0]?.id || null,
+          tags: deriveTagsFromNotes(notes),
+          syncStatus: 'synced',
+          lastSyncedAt: new Date().toISOString(),
+          storageType: 'localStorage',
+          storageName: 'Local Storage'
+        });
+        toast.success('Disconnected from local folder');
+      }
     }
   },
 }));
@@ -816,3 +936,27 @@ export const createNewNote = (): Note => ({
   tags: [], // Initialize with empty tags array
   codeBlocks: [], // NEW: Initialize with empty code blocks array
 });
+
+// Initialize notes asynchronously from storage
+(async () => {
+  const notes = await storageManager.getNotes();
+
+  // Check if this is first launch  
+  if (notes.length === 0 && localStorage.getItem('sandbooks-first-run-complete') !== 'true') {
+    const docNotes = createDefaultDocumentation();
+    await storageManager.saveAllNotes(docNotes);
+    localStorage.setItem('sandbooks-first-run-complete', 'true');
+
+    useNotesStore.setState({
+      notes: docNotes,
+      tags: deriveTagsFromNotes(docNotes),
+      activeNoteId: docNotes[0]?.id || null
+    });
+  } else if (notes.length > 0) {
+    useNotesStore.setState({
+      notes,
+      tags: deriveTagsFromNotes(notes),
+      activeNoteId: notes[0]?.id || null
+    });
+  }
+})();

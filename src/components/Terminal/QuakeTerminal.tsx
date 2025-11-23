@@ -39,13 +39,11 @@ export function QuakeTerminal() {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       // Ctrl+` - Toggle terminal (Ctrl avoids macOS system shortcut conflict)
-      if (e.ctrlKey && e.key === '`' && !e.metaKey) {
+      // Toggle with Ctrl + ` (Matches global shortcut)
+      if (e.ctrlKey && e.key === '`') {
         e.preventDefault();
-        if (isTerminalOpen) {
-          handleClose();
-        } else {
-          toggleTerminal();
-        }
+        toggleTerminal();
+        return;
       }
 
       // Esc - Close terminal (only if open and not focused on editor)

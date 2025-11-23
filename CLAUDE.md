@@ -245,5 +245,10 @@ Example: `feat(editor): add syntax highlighting toggle`
 6. Submit PR
 
 See CONTRIBUTING.md for detailed guidelines.
+
+# Design
+
+Remember - You must focus on a design puts the human and their task first: interfaces must be immediately understandable, with simple layouts, obvious actions, and no extra clutter.   Visually, it uses strong hierarchy (clear titles, grouped sections, disciplined spacing and type) and restrained color so that content stands out while chrome stays quiet.   It uses layers, motion, and depth to explain where things are and what just happened, so transitions and animations teach structure instead of being decoration.   Underneath, it’s about consistency and respect: familiar patterns across devices, fast and precise feedback, strong accessibility, and always leaving the user in control of what happens.
+
 - remember to always run lint -> build -> test:coverage (with code coverage >=80%)
 - no code modification should exist wihout full lint -> build -> test before claiming completion. if anything fails in this phases, such as test requiring updates, it is not enough to only rerun tests, but you need to rerun linting first, then build all, then test all with the expected test coverage threshold (>=80%)

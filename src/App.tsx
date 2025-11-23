@@ -1,5 +1,5 @@
 import { useEffect, useState, lazy, Suspense } from 'react';
-import { useNotesStore, createNewNote } from './store/notesStore';
+import { useNotesStore } from './store/notesStore';
 import { Header } from './components/ui/Header';
 import { Sidebar } from './components/Sidebar/Sidebar';
 import { Editor } from './components/Editor/Editor';
@@ -10,19 +10,14 @@ import type { JSONContent } from '@tiptap/react';
 const SearchBar = lazy(() => import('./components/Search/SearchBar').then(m => ({ default: m.SearchBar })));
 const KeyboardShortcuts = lazy(() => import('./components/Help/KeyboardShortcuts').then(m => ({ default: m.KeyboardShortcuts })));
 const QuakeTerminal = lazy(() => import('./components/Terminal').then(m => ({ default: m.QuakeTerminal })));
+import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 
 function App() {
   const {
     notes,
     activeNoteId,
-    addNote,
     updateNote,
     setActiveNote,
-    openSearch,
-    toggleShortcuts,
-    toggleSidebar,
-    toggleTypewriterMode,
-    toggleFocusMode,
     initializeGlobalTerminalSession,
     autoHealSandbox,
   } = useNotesStore();
@@ -135,80 +130,8 @@ function App() {
     return () => window.removeEventListener('keydown', handleEscape, true);
   }, []);
 
-  // Global keyboard shortcuts (Gmail/Linear pattern: context-sensitive, cross-platform)
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      const target = e.target as HTMLElement;
-      const isTyping = ['INPUT', 'TEXTAREA'].includes(target.tagName) ||
-        target.contentEditable === 'true' ||
-        target.classList.contains('ProseMirror');
-
-      // Context-sensitive shortcuts (only when NOT typing in editor)
-      if (!isTyping) {
-        // ? - Show keyboard shortcuts (Gmail/Linear pattern, safest)
-        if (e.key === '?' && !e.ctrlKey && !e.metaKey && !e.altKey) {
-          e.preventDefault();
-          toggleShortcuts();
-          return;
-        }
-
-        // / - Open search (Slack/Figma pattern, safe)
-        if (e.key === '/' && !e.ctrlKey && !e.metaKey && !e.altKey) {
-          e.preventDefault();
-          openSearch();
-          return;
-        }
-
-        // c - Create new note (Gmail pattern, safe)
-        if (e.key === 'c' && !e.ctrlKey && !e.metaKey && !e.altKey) {
-          e.preventDefault();
-          const newNote = createNewNote();
-          addNote(newNote);
-          return;
-        }
-      }
-
-      // Global shortcuts (work even when typing)
-      const modifier = e.ctrlKey || e.metaKey;
-
-      // Cmd+B / Ctrl+B: Toggle sidebar (industry standard)
-      if (modifier && e.key === 'b' && !e.shiftKey) {
-        // Only activate if NOT in the TipTap editor (let TipTap handle bold)
-        if (!target.classList.contains('ProseMirror')) {
-          e.preventDefault();
-          toggleSidebar();
-          return;
-        }
-      }
-
-      // Cmd+K / Ctrl+K: Command palette/Search (industry standard, but check if in editor)
-      if (modifier && e.key === 'k' && !e.shiftKey) {
-        // Only activate if NOT in the TipTap editor (let TipTap handle link insertion)
-        if (!target.classList.contains('ProseMirror')) {
-          e.preventDefault();
-          openSearch();
-          return;
-        }
-      }
-
-      // Cmd+Shift+T / Ctrl+Shift+T: Toggle typewriter mode (iA Writer pattern)
-      if (modifier && e.shiftKey && e.key === 'T') {
-        e.preventDefault();
-        toggleTypewriterMode();
-        return;
-      }
-
-      // Cmd+Shift+F / Ctrl+Shift+F: Toggle focus mode (FocusWriter/iA Writer pattern)
-      if (modifier && e.shiftKey && e.key === 'F') {
-        e.preventDefault();
-        toggleFocusMode();
-        return;
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [openSearch, toggleShortcuts, addNote, toggleSidebar, toggleTypewriterMode, toggleFocusMode]);
+  // Global keyboard shortcuts
+  useKeyboardShortcuts();
 
   return (
     <div className="h-screen flex flex-col bg-white dark:bg-stone-900">

@@ -1,14 +1,11 @@
-import { useEditor, EditorContent, BubbleMenu } from '@tiptap/react';
+import { useEditor, EditorContent } from '@tiptap/react';
 import { Logo } from '../ui/Logo';
 import StarterKit from '@tiptap/starter-kit';
-import Link from '@tiptap/extension-link';
 import Image from '@tiptap/extension-image';
 import TaskList from '@tiptap/extension-task-list';
 import TaskItem from '@tiptap/extension-task-item';
 import Highlight from '@tiptap/extension-highlight';
-import Typography from '@tiptap/extension-typography';
 import Placeholder from '@tiptap/extension-placeholder';
-import Underline from '@tiptap/extension-underline';
 import equal from 'fast-deep-equal';
 import { ExecutableCodeBlock } from './executableCodeBlockExtension';
 import { MarkdownInputRules } from './markdownInputRules';
@@ -18,6 +15,7 @@ import { FocusMode } from './extensions/FocusMode';
 import { MinimalTagDisplay } from '../Tags';
 import { ImageUploadModal } from './ImageUploadModal';
 import { CodeMirrorBlock } from '../CodeMirror/CodeMirrorBlock';
+import { Markdown } from '@tiptap/markdown';
 import { useTypewriterMode } from '../../hooks/useTypewriterMode';
 import { useNotesStore } from '../../store/notesStore';
 import type { Note } from '../../types';
@@ -46,12 +44,6 @@ export const Editor = ({ note, onUpdate }: EditorProps) => {
         // Keep all other extensions enabled (blockquote, horizontalRule, etc.)
       }),
       ExecutableCodeBlock,
-      Link.configure({
-        openOnClick: false,
-        HTMLAttributes: {
-          class: 'text-blue-600 hover:text-blue-700 underline cursor-pointer',
-        },
-      }),
       Image.configure({
         inline: false, // Block-level display
         allowBase64: true,
@@ -76,15 +68,6 @@ export const Editor = ({ note, onUpdate }: EditorProps) => {
           class: 'bg-yellow-200 px-1 rounded',
         },
       }),
-      Underline,
-      Typography.configure({
-        // Disable smart quotes to prevent breaking code snippets
-        openDoubleQuote: false,
-        closeDoubleQuote: false,
-        openSingleQuote: false,
-        closeSingleQuote: false,
-        // Keep other typography features like em dashes and ellipses
-      }),
       Placeholder.configure({
         placeholder: 'Start writing... (Press ? for help, / for commands)',
       }),
@@ -94,6 +77,7 @@ export const Editor = ({ note, onUpdate }: EditorProps) => {
       FocusMode.configure({
         enabled: focusModeEnabled,
       }),
+      Markdown, // Official Tiptap v3 markdown support
     ],
     content: note.content,
     onUpdate: ({ editor }) => {
@@ -238,83 +222,6 @@ export const Editor = ({ note, onUpdate }: EditorProps) => {
 
   return (
     <div className="flex-1 flex flex-col overflow-hidden bg-white dark:bg-stone-900">
-      {/* Bubble Menu */}
-      <BubbleMenu
-        editor={editor}
-        tippyOptions={{ duration: 100 }}
-        className="bg-stone-800 dark:bg-stone-700 shadow-elevation-4 rounded-xl flex items-center gap-1 p-1.5"
-      >
-        <button
-          onClick={() => editor.chain().focus().toggleBold().run()}
-          className={clsx(
-            'p-2 text-white rounded-lg transition-all duration-200 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-blue-600 focus-visible:ring-offset-3 active:scale-[0.95]',
-            editor.isActive('bold') ? 'bg-stone-600' : 'hover:bg-stone-700'
-          )}
-          title="Bold (⌘B)"
-          aria-label="Bold (⌘B)"
-        >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 4h8a4 4 0 014 4 4 4 0 01-4 4H6z" />
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 12h9a4 4 0 014 4 4 4 0 01-4 4H6z" />
-          </svg>
-        </button>
-        <button
-          onClick={() => editor.chain().focus().toggleItalic().run()}
-          className={clsx(
-            'p-2 text-white rounded-lg transition-all duration-200 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-blue-600 focus-visible:ring-offset-3 active:scale-[0.95]',
-            editor.isActive('italic') ? 'bg-stone-600' : 'hover:bg-stone-700'
-          )}
-          title="Italic (⌘I)"
-          aria-label="Italic (⌘I)"
-        >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <line x1="19" y1="4" x2="10" y2="4" strokeWidth={2} strokeLinecap="round" />
-            <line x1="14" y1="20" x2="5" y2="20" strokeWidth={2} strokeLinecap="round" />
-            <line x1="15" y1="4" x2="9" y2="20" strokeWidth={2} strokeLinecap="round" />
-          </svg>
-        </button>
-        <button
-          onClick={() => editor.chain().focus().toggleStrike().run()}
-          className={clsx(
-            'p-2 text-white rounded-lg transition-all duration-200 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-blue-600 focus-visible:ring-offset-3 active:scale-[0.95]',
-            editor.isActive('strike') ? 'bg-stone-600' : 'hover:bg-stone-700'
-          )}
-          title="Strikethrough"
-          aria-label="Strikethrough"
-        >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12h18M9 5l6 14M15 5l-6 14" />
-          </svg>
-        </button>
-        <button
-          onClick={() => editor.chain().focus().toggleHighlight().run()}
-          className={clsx(
-            'p-2 text-white rounded-lg transition-all duration-200 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-blue-600 focus-visible:ring-offset-3 active:scale-[0.95]',
-            editor.isActive('highlight') ? 'bg-stone-600' : 'hover:bg-stone-700'
-          )}
-          title="Highlight (⌘⇧H)"
-          aria-label="Highlight (⌘⇧H)"
-        >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10M12 3v18M3 12l9-9 9 9" />
-          </svg>
-        </button>
-        <div className="w-px h-6 bg-stone-600 mx-1" />
-        <button
-          onClick={() => setShowLinkInput(true)}
-          className={clsx(
-            'p-2 text-white rounded-lg transition-all duration-200 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-blue-600 focus-visible:ring-offset-3 active:scale-[0.95]',
-            editor.isActive('link') ? 'bg-stone-600' : 'hover:bg-stone-700'
-          )}
-          title="Link (⌘K)"
-          aria-label="Insert link (⌘K)"
-        >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
-          </svg>
-        </button>
-      </BubbleMenu>
-
       {/* Link Input Modal */}
       {showLinkInput && (
         <div className="fixed inset-0 bg-stone-900/40 dark:bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 animate-fadeIn">

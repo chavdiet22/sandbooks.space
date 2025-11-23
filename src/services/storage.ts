@@ -3,14 +3,25 @@ import { showToast as toast } from '../utils/toast';
 
 const STORAGE_KEY = 'sandbooks_notes';
 
-export const storageService = {
+export interface StorageService {
+  getNotes(): Promise<Note[]> | Note[];
+  saveNotes(notes: Note[]): Promise<void> | void;
+  // We might need granular methods for file system
+  saveNote?(note: Note): Promise<void>;
+  deleteNote?(noteId: string): Promise<void>;
+
+  exportNotes(notes: Note[]): string;
+  importNotes(data: string): Note[];
+  clear(): void;
+}
+
+export const localStorageService: StorageService = {
   getNotes(): Note[] {
     try {
       const data = localStorage.getItem(STORAGE_KEY);
       if (!data) return [];
       return JSON.parse(data);
     } catch (_error) {
-      // Silent fail for localStorage read errors
       return [];
     }
   },
@@ -37,7 +48,6 @@ export const storageService = {
       if (!Array.isArray(parsed)) {
         throw new Error('Invalid format: expected an array of notes');
       }
-      // Validate structure
       return parsed.filter((note: Note) =>
         note.id &&
         note.title !== undefined &&
@@ -54,3 +64,6 @@ export const storageService = {
     localStorage.removeItem(STORAGE_KEY);
   },
 };
+
+// Default export for backward compatibility
+export const storageService = localStorageService;

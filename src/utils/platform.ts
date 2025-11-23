@@ -11,7 +11,7 @@
 export const isMac = (): boolean => {
   if (typeof window === 'undefined') return false;
   return /Mac|iPhone|iPad|iPod/.test(navigator.platform) ||
-         /Mac|iPhone|iPad|iPod/.test(navigator.userAgent);
+    /Mac|iPhone|iPad|iPod/.test(navigator.userAgent);
 };
 
 /**
@@ -71,22 +71,34 @@ export const formatShortcut = (keys: string[]): string => {
 export const matchesShortcut = (event: KeyboardEvent, pattern: string): boolean => {
   const parts = pattern.toLowerCase().split('+');
   const key = parts[parts.length - 1];
-  const modifiers = parts.slice(0, -1);
+  const rawModifiers = parts.slice(0, -1);
+  const mac = isMac();
+
+  // Resolve 'mod' to platform specific key
+  const resolvedModifiers = rawModifiers.map(m =>
+    m === 'mod' ? (mac ? 'meta' : 'ctrl') : m
+  );
 
   // Check if the key matches
-  const keyMatches = event.key.toLowerCase() === key.toLowerCase();
+  // We check both event.key (for standard keys) and event.code (for physical keys, crucial for Mac Option+Key)
+  const targetKey = key.toLowerCase();
+  const keyMatches =
+    event.key.toLowerCase() === targetKey ||
+    event.code.toLowerCase() === `key${targetKey}`;
 
-  // Check modifiers
-  const hasCtrl = modifiers.includes('ctrl') || modifiers.includes('mod');
-  const hasMeta = modifiers.includes('meta') || modifiers.includes('mod');
-  const hasAlt = modifiers.includes('alt');
-  const hasShift = modifiers.includes('shift');
+  // Check modifiers strictly
+  // If 'ctrl' is in the pattern, event.ctrlKey must be true.
+  // If 'ctrl' is NOT in the pattern, event.ctrlKey must be false.
+  const hasCtrl = resolvedModifiers.includes('ctrl');
+  const hasMeta = resolvedModifiers.includes('meta');
+  const hasAlt = resolvedModifiers.includes('alt');
+  const hasShift = resolvedModifiers.includes('shift');
 
   const modifierMatches =
-    (hasCtrl ? event.ctrlKey : !event.ctrlKey || hasMeta) &&
-    (hasMeta ? event.metaKey : !event.metaKey || hasCtrl) &&
-    (hasAlt ? event.altKey : !event.altKey) &&
-    (hasShift ? event.shiftKey : !event.shiftKey);
+    event.ctrlKey === hasCtrl &&
+    event.metaKey === hasMeta &&
+    event.altKey === hasAlt &&
+    event.shiftKey === hasShift;
 
   return keyMatches && modifierMatches;
 };

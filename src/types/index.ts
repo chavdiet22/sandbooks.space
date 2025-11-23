@@ -65,6 +65,9 @@ export interface NotesStore {
   darkModeEnabled: boolean;
   isSearchOpen: boolean;
   searchQuery: string;
+  openSearch: () => void;
+  closeSearch: () => void;
+  setSearchQuery: (query: string) => void;
   isShortcutsOpen: boolean;
   isSidebarOpen: boolean; // Sidebar visibility toggle
   typewriterModeEnabled: boolean; // Typewriter mode toggle
@@ -83,6 +86,8 @@ export interface NotesStore {
   isCreatingSandbox: boolean;
   syncStatus: SyncStatus;
   lastSyncedAt: string | null;
+  storageType: 'localStorage' | 'fileSystem'; // NEW: Track active provider type
+  storageName: string; // NEW: Track active provider name
   addNote: (note: Note) => void;
   updateNote: (id: string, updates: Partial<Note>) => void;
   deleteNote: (id: string) => void;
@@ -90,10 +95,9 @@ export interface NotesStore {
   toggleCloudExecution: () => Promise<void>;
   toggleDarkMode: () => void;
   exportNotes: () => string;
-  importNotes: (data: string) => void;
-  openSearch: () => void;
-  closeSearch: () => void;
-  setSearchQuery: (query: string) => void;
+  importNotes: (json: string) => boolean;
+  importMarkdownNote: (file: File) => Promise<void>;
+  resetOnboardingDocs: (options?: { silent?: boolean; source?: string }) => void;
   toggleShortcuts: () => void;
   toggleSidebar: () => void;
   toggleTypewriterMode: () => void;
@@ -116,11 +120,15 @@ export interface NotesStore {
   checkSandboxHealth: () => Promise<boolean>;
   autoHealSandbox: (options?: { reason?: string; force?: boolean }) => Promise<boolean>;
   recreateSandbox: () => Promise<void>;
-  resetOnboardingDocs: (options?: { silent?: boolean; source?: string }) => void;
+  // Onboarding
   seedDocsIfMissing: () => void;
   // Code block management methods (NEW)
   addCodeBlock: (noteId: string, codeBlock: Omit<CodeBlock, 'id' | 'createdAt' | 'updatedAt'>) => void;
   updateCodeBlock: (noteId: string, blockId: string, updates: Partial<CodeBlock>) => void;
   deleteCodeBlock: (noteId: string, blockId: string) => void;
   executeCodeBlock: (noteId: string, blockId: string) => Promise<void>;
+  // Storage Provider - replaces fileSystemHandle
+  getStorageInfo: () => import('../services/StorageProvider').StorageProviderMetadata;
+  connectToLocalFolder: () => Promise<void>;
+  disconnectFromLocalFolder: () => Promise<void>;
 }
