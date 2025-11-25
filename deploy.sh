@@ -116,6 +116,8 @@ BACKEND_SETTINGS=(
   LOG_LEVEL=info
   HOPX_API_KEY="$HOPX_API_KEY"
   SCM_DO_BUILD_DURING_DEPLOYMENT=false
+  ENABLE_ORYX_BUILD=false
+  WEBSITE_RUN_FROM_PACKAGE=1
   RATE_LIMIT_WINDOW_MS="$RATE_LIMIT_WINDOW_MS"
   RATE_LIMIT_MAX_REQUESTS="$RATE_LIMIT_MAX_REQUESTS"
 )
@@ -151,6 +153,7 @@ az webapp deploy \
   --src-path "$ARTIFACT" \
   --type zip \
   --restart true \
+  --timeout 600 \
   --output none
 
 log "Restarting backend"
