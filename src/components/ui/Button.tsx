@@ -3,7 +3,7 @@ import clsx from 'clsx';
 
 export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
     variant?: 'default' | 'ghost' | 'outline' | 'secondary' | 'danger' | 'primary-subtle';
-    size?: 'sm' | 'md' | 'lg' | 'icon';
+    size?: 'sm' | 'md' | 'lg' | 'icon' | 'icon-sm' | 'icon-xs';
     isLoading?: boolean;
 }
 
@@ -25,6 +25,8 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
             md: "h-10 px-4 py-2 text-sm",
             lg: "h-12 px-6 text-base",
             icon: "h-11 w-11 p-2.5",
+            'icon-sm': "h-8 w-8 p-1.5",      // Compact toolbar icons (32px)
+            'icon-xs': "h-7 w-7 p-1",        // Extra compact (28px)
         };
 
         return (

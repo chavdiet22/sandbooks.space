@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, forwardRef } from 'react';
 import type { Tag } from '../../types/tags.types';
 import { useNotesStore } from '../../store/notesStore';
 import { TagColorPicker } from './TagColorPicker';
@@ -9,7 +9,8 @@ interface MinimalTagDisplayProps {
 }
 
 // Minimal inline tag display - appears at bottom of note content
-export const MinimalTagDisplay: React.FC<MinimalTagDisplayProps> = ({ noteId, tags }) => {
+export const MinimalTagDisplay = forwardRef<HTMLDivElement, MinimalTagDisplayProps>(
+  ({ noteId, tags }, ref) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [input, setInput] = useState('');
   const [colorPickerTagId, setColorPickerTagId] = useState<string | null>(null);
@@ -66,7 +67,7 @@ export const MinimalTagDisplay: React.FC<MinimalTagDisplayProps> = ({ noteId, ta
   if (!isExpanded && tags.length === 0) {
     // Hidden state - just a tiny add button
     return (
-      <div className="flex items-center justify-end py-2 px-4 opacity-0 hover:opacity-100 transition-opacity duration-200">
+      <div ref={ref} className="flex items-center justify-end py-2 px-4 opacity-0 hover:opacity-100 transition-opacity duration-200">
         <button
           onClick={() => setIsExpanded(true)}
           className="text-xs text-stone-400 dark:text-stone-600 hover:text-stone-600 dark:hover:text-stone-400 transition-colors duration-200"
@@ -85,7 +86,7 @@ export const MinimalTagDisplay: React.FC<MinimalTagDisplayProps> = ({ noteId, ta
   };
 
   return (
-    <div className="py-3 px-4 border-t border-stone-200/50 dark:border-stone-700/50">
+    <div ref={ref} className="py-3 px-4 border-t border-stone-200/50 dark:border-stone-700/50">
       <div className="flex items-center gap-2 flex-wrap text-xs">
         {/* Existing tags - minimal dots + text */}
         {tags.map((tag) => (
@@ -172,4 +173,6 @@ export const MinimalTagDisplay: React.FC<MinimalTagDisplayProps> = ({ noteId, ta
       </div>
     </div>
   );
-};
+});
+
+MinimalTagDisplay.displayName = 'MinimalTagDisplay';

@@ -5,7 +5,7 @@ export default defineConfig({
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
-  workers: process.env.CI ? 1 : 5,
+  workers: process.env.CI ? 1 : 3,
   reporter: [
     ['html', { open: 'never' }],
   ],
@@ -14,10 +14,31 @@ export default defineConfig({
     baseURL: 'http://localhost:5173',
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
-    // Use bundled Chromium instead of system Chrome to avoid extra tabs
+    headless: true,
     launchOptions: {
-      // Prevent Playwright from opening extra blank pages
-      args: ['--disable-popup-blocking', '--no-first-run', '--no-default-browser-check'],
+      args: [
+        '--disable-popup-blocking',
+        '--no-first-run',
+        '--no-default-browser-check',
+        '--disable-extensions',
+        '--disable-sync',
+        '--disable-background-networking',
+        '--disable-background-timer-throttling',
+        '--disable-backgrounding-occluded-windows',
+        '--disable-breakpad',
+        '--disable-component-update',
+        '--disable-default-apps',
+        '--disable-dev-shm-usage',
+        '--disable-hang-monitor',
+        '--disable-ipc-flooding-protection',
+        '--disable-prompt-on-repost',
+        '--disable-renderer-backgrounding',
+        '--disable-translate',
+        '--metrics-recording-only',
+        '--no-sandbox',
+        '--password-store=basic',
+        '--use-mock-keychain',
+      ],
     },
   },
 
@@ -33,17 +54,10 @@ export default defineConfig({
       name: 'chromium',
       use: {
         ...devices['Desktop Chrome'],
-        // Ensure consistent browser behavior
         contextOptions: {
-          // Each test gets a fresh context, no shared state
           ignoreHTTPSErrors: true,
         },
       },
     },
   ],
-
-  // Note: Start servers manually before running tests:
-  //   Terminal 1: cd backend && npm run dev
-  //   Terminal 2: npm run dev
-  //   Terminal 3: npm test
 });

@@ -210,8 +210,10 @@ export const SlashMenuList = forwardRef<SlashMenuListHandle, SlashMenuListProps>
 
     if (items.length === 0) {
       return (
-        <div className="bg-white dark:bg-stone-800 rounded-xl shadow-elevation-4 border border-stone-200 dark:border-stone-700 p-4 min-w-[320px] max-w-[400px]">
-          <div className="text-sm text-stone-500 dark:text-stone-400 text-center">
+        <div className="relative backdrop-blur-xl bg-white/90 dark:bg-stone-900/90 rounded-xl shadow-elevation-4 border border-stone-200/40 dark:border-stone-700/40 p-4 min-w-[320px] max-w-[400px]">
+          {/* Inner glow overlay for glass depth */}
+          <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-white/40 via-transparent to-transparent dark:from-white/5 pointer-events-none" aria-hidden="true" />
+          <div className="relative text-sm text-stone-500 dark:text-stone-400 text-center">
             No matching commands
           </div>
         </div>
@@ -219,13 +221,15 @@ export const SlashMenuList = forwardRef<SlashMenuListHandle, SlashMenuListProps>
     }
 
     return (
-      <div className="bg-white dark:bg-stone-800 rounded-xl shadow-elevation-4 border border-stone-200 dark:border-stone-700 overflow-hidden min-w-[320px] max-w-[400px]">
-        <div className="px-3 py-2 border-b border-stone-200 dark:border-stone-700 bg-stone-50 dark:bg-stone-900">
+      <div className="relative backdrop-blur-xl bg-white/90 dark:bg-stone-900/90 rounded-xl shadow-elevation-4 border border-stone-200/40 dark:border-stone-700/40 overflow-hidden min-w-[320px] max-w-[400px]">
+        {/* Inner glow overlay for glass depth */}
+        <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-white/40 via-transparent to-transparent dark:from-white/5 pointer-events-none" aria-hidden="true" />
+        <div className="relative px-3 py-2 border-b border-stone-200/40 dark:border-stone-700/40 bg-stone-50/50 dark:bg-stone-900/50">
           <div className="text-xs font-medium text-stone-600 dark:text-stone-400 uppercase tracking-wide">
             Commands
           </div>
         </div>
-        <div ref={containerRef} className="max-h-[360px] overflow-y-auto py-1">
+        <div ref={containerRef} className="relative max-h-[360px] overflow-y-auto py-1">
           {items.map((item, index) => (
             <button
               key={index}
@@ -270,7 +274,7 @@ export const SlashMenuList = forwardRef<SlashMenuListHandle, SlashMenuListProps>
             </button>
           ))}
         </div>
-        <div className="px-3 py-2 border-t border-stone-200 dark:border-stone-700 bg-stone-50 dark:bg-stone-900">
+        <div className="relative px-3 py-2 border-t border-stone-200/40 dark:border-stone-700/40 bg-stone-50/50 dark:bg-stone-900/50">
           <div className="text-xs text-stone-500 dark:text-stone-400 flex items-center gap-3">
             <span className="flex items-center gap-1">
               <kbd className="px-1.5 py-0.5 text-xs bg-white dark:bg-stone-800 border border-stone-300 dark:border-stone-600 rounded shadow-sm">

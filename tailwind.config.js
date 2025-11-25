@@ -117,6 +117,8 @@ module.exports = {
         // Legacy (keep for compatibility)
         'out': 'cubic-bezier(0, 0, 0.2, 1)',
         'in-out': 'cubic-bezier(0.4, 0, 0.2, 1)',
+        // Alias for Tailwind ease-* classes
+        'ease-spring': 'cubic-bezier(0.34, 1.56, 0.64, 1)',
       },
       keyframes: {
         fadeIn: {
@@ -174,6 +176,11 @@ module.exports = {
           '0%, 100%': { transform: 'translateY(0)' },
           '50%': { transform: 'translateY(-3px)' },
         },
+        // Sidebar note delete exit animation
+        fadeOutSlideLeft: {
+          '0%': { opacity: '1', transform: 'translateX(0)' },
+          '100%': { opacity: '0', transform: 'translateX(-20px)' },
+        },
       },
       animation: {
         fadeIn: 'fadeIn 300ms cubic-bezier(0.34, 1.56, 0.64, 1)',      // Spring physics
@@ -188,6 +195,7 @@ module.exports = {
         executionPulse: 'executionPulse 1.5s ease-out infinite',
         successPop: 'successPop 400ms cubic-bezier(0.34, 1.56, 0.64, 1)',
         retryBounce: 'retryBounce 600ms ease-in-out infinite',
+        fadeOutSlideLeft: 'fadeOutSlideLeft 200ms ease-out forwards',
       },
     },
   },

@@ -98,10 +98,13 @@ export const LinkPopover = ({ editor, onClose, initialUrl = '' }: LinkPopoverPro
   return (
     <div
       ref={popoverRef}
-      className="fixed bg-white dark:bg-stone-800 border border-stone-200 dark:border-stone-700 rounded-lg shadow-elevation-2 p-3 max-w-[320px] z-50 animate-fadeInSlideUp"
+      className="fixed backdrop-blur-xl bg-white/90 dark:bg-stone-900/90 border border-stone-200/40 dark:border-stone-700/40 rounded-xl shadow-elevation-3 p-4 max-w-[320px] z-50 animate-fadeInSlideUp"
       role="dialog"
       aria-label="Insert or edit link"
     >
+      {/* Inner glow overlay for glass depth */}
+      <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-white/40 via-transparent to-transparent dark:from-white/5 pointer-events-none" aria-hidden="true" />
+
       <input
         ref={inputRef}
         type="text"
@@ -109,20 +112,20 @@ export const LinkPopover = ({ editor, onClose, initialUrl = '' }: LinkPopoverPro
         onChange={(e) => setUrl(e.target.value)}
         onKeyDown={handleKeyDown}
         placeholder="https://example.com"
-        className="w-full px-3 py-2 text-sm border border-stone-200 dark:border-stone-700 rounded-lg bg-stone-50 dark:bg-stone-800/50 text-stone-900 dark:text-stone-50 placeholder-stone-400 dark:placeholder-stone-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all duration-200"
+        className="relative w-full px-3 py-2.5 text-sm border border-stone-200/60 dark:border-stone-700/60 rounded-lg bg-white/50 dark:bg-stone-800/50 text-stone-900 dark:text-stone-50 placeholder-stone-400 dark:placeholder-stone-500 focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500/60 transition-all duration-200"
         aria-label="Link URL"
       />
-      <div className="flex gap-3 justify-end mt-3">
+      <div className="relative flex gap-3 justify-end mt-4">
         <button
           onClick={onClose}
-          className="px-4 py-2 text-sm font-medium text-stone-600 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-200 hover:bg-stone-100 dark:hover:bg-stone-700/50 rounded-lg transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+          className="px-4 py-2 text-sm font-medium text-stone-600 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-200 hover:bg-stone-100/80 dark:hover:bg-stone-700/50 rounded-lg transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
           aria-label="Cancel link insertion"
         >
           Cancel
         </button>
         <button
           onClick={handleSubmit}
-          className="px-4 py-2 text-sm font-medium bg-stone-900 dark:bg-stone-100 text-white dark:text-stone-900 rounded-lg hover:bg-stone-800 dark:hover:bg-white transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+          className="px-4 py-2 text-sm font-medium bg-stone-900 dark:bg-stone-100 text-white dark:text-stone-900 rounded-lg hover:bg-stone-800 dark:hover:bg-white transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 shadow-sm"
           aria-label="Insert link"
         >
           Insert

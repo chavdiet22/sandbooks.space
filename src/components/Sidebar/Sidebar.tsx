@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useCallback, useState, useRef } from 'react';
 import { useNotesStore } from '../../store/notesStore';
 import { formatTimestamp } from '../../utils/formatTimestamp';
 import { serializeToMarkdown } from '../../utils/markdownSerializer';
@@ -6,21 +6,96 @@ import clsx from 'clsx';
 import { Logo } from '../ui/Logo';
 import { ContextMenu } from '../ui/ContextMenu';
 import type { ContextMenuItem } from '../ui/ContextMenu';
-import { VscCopy, VscTrash } from 'react-icons/vsc';
+import { ConfirmDialog } from '../ui/ConfirmDialog';
+import { VscCopy, VscTrash, VscEllipsis } from 'react-icons/vsc';
 import { useCopyToClipboard } from '../../hooks/useCopyToClipboard';
 import { showToast } from '../../utils/toast';
 
 export const Sidebar = ({ isMobile = false, onClose }: { isMobile?: boolean; onClose?: () => void }) => {
   const { notes, activeNoteId, isSidebarOpen, setActiveNote, deleteNote } = useNotesStore();
 
+  // Delete confirmation state
+  const [deleteConfirm, setDeleteConfirm] = useState<{ noteId: string; title: string } | null>(null);
+  // Delete exit animation state
+  const [deletingNoteId, setDeletingNoteId] = useState<string | null>(null);
+  // Refs for focus management after delete
+  const noteRefs = useRef<Map<string, HTMLButtonElement>>(new Map());
+  const listRef = useRef<HTMLDivElement>(null);
+
+  // Keyboard navigation for notes list
+  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
+    const currentIndex = notes.findIndex(n => n.id === activeNoteId);
+    let newIndex = currentIndex;
+
+    switch (e.key) {
+      case 'ArrowDown':
+        e.preventDefault();
+        newIndex = Math.min(currentIndex + 1, notes.length - 1);
+        break;
+      case 'ArrowUp':
+        e.preventDefault();
+        newIndex = Math.max(currentIndex - 1, 0);
+        break;
+      case 'Home':
+        e.preventDefault();
+        newIndex = 0;
+        break;
+      case 'End':
+        e.preventDefault();
+        newIndex = notes.length - 1;
+        break;
+      default:
+        return;
+    }
+
+    if (newIndex !== currentIndex && notes[newIndex]) {
+      setActiveNote(notes[newIndex].id);
+      noteRefs.current.get(notes[newIndex].id)?.focus();
+    }
+  }, [notes, activeNoteId, setActiveNote]);
+
   const { copy } = useCopyToClipboard({
     onSuccess: () => showToast.success('Copied to clipboard'),
     onError: (err) => showToast.error(err.message || 'Failed to copy'),
   });
 
-  const handleDelete = (e: React.MouseEvent, noteId: string) => {
+  // Show delete confirmation dialog
+  const handleDeleteClick = (e: React.MouseEvent, noteId: string, noteTitle: string) => {
     e.stopPropagation();
-    deleteNote(noteId);
+    setDeleteConfirm({ noteId, title: noteTitle });
+  };
+
+  // Confirm delete with animation
+  const handleConfirmDelete = () => {
+    if (!deleteConfirm) return;
+
+    const noteId = deleteConfirm.noteId;
+    const noteIndex = notes.findIndex(n => n.id === noteId);
+
+    // Start exit animation
+    setDeletingNoteId(noteId);
+    setDeleteConfirm(null);
+
+    // After animation, delete and manage focus
+    setTimeout(() => {
+      deleteNote(noteId);
+      setDeletingNoteId(null);
+
+      // Focus management: focus next note, or previous, or nothing
+      const remainingNotes = notes.filter(n => n.id !== noteId);
+      if (remainingNotes.length > 0) {
+        const nextIndex = Math.min(noteIndex, remainingNotes.length - 1);
+        const nextNoteId = remainingNotes[nextIndex]?.id;
+        if (nextNoteId) {
+          const nextButton = noteRefs.current.get(nextNoteId);
+          nextButton?.focus();
+        }
+      }
+    }, 200);
+  };
+
+  const handleCancelDelete = () => {
+    setDeleteConfirm(null);
   };
 
   const getContextMenuItems = useCallback((noteId: string, _noteTitle: string): ContextMenuItem[] => {
@@ -42,10 +117,13 @@ export const Sidebar = ({ isMobile = false, onClose }: { isMobile?: boolean; onC
         label: 'Delete',
         icon: <VscTrash size={14} />,
         variant: 'danger',
-        onClick: () => deleteNote(noteId),
+        onClick: () => {
+          const note = notes.find(n => n.id === noteId);
+          setDeleteConfirm({ noteId, title: note?.title || 'Untitled' });
+        },
       },
     ];
-  }, [notes, copy, deleteNote]);
+  }, [notes, copy]);
 
   // Mobile sidebar is always "open" when rendered (controlled by parent overlay)
   const isOpen = isMobile ? true : isSidebarOpen;
@@ -72,7 +150,7 @@ export const Sidebar = ({ isMobile = false, onClose }: { isMobile?: boolean; onC
       isMobile ? "w-full h-full" : "hidden md:block transition-[width,opacity] duration-300 ease-in-out",
       !isMobile && (isOpen ? "w-64 lg:w-72" : "w-0 opacity-0")
     )}>
-      <div className="pt-3 px-3 pb-6">
+      <div className="py-4 px-2">
         {isMobile && (
           <div className="flex items-center justify-between mb-6 pl-2 pr-1">
             <div className="flex items-center gap-3">
@@ -90,35 +168,56 @@ export const Sidebar = ({ isMobile = false, onClose }: { isMobile?: boolean; onC
             </button>
           </div>
         )}
+        {/* Notes list with keyboard navigation */}
+        <div
+          ref={listRef}
+          role="listbox"
+          aria-label="Notes"
+          aria-activedescendant={activeNoteId ? `note-${activeNoteId}` : undefined}
+          onKeyDown={handleKeyDown}
+        >
         {notes.map((note) => {
           const timestamp = formatTimestamp(note.updatedAt);
 
           return (
             <ContextMenu key={note.id} items={getContextMenuItems(note.id, note.title)}>
               <div
+                id={`note-${note.id}`}
+                role="option"
+                aria-selected={activeNoteId === note.id}
                 className={clsx(
-                  'px-2.5 md:px-3 py-2.5 md:py-2.5 mb-0.5 mx-1 rounded-lg transition-all duration-200 ease-out group relative touch-manipulation',
+                  'px-3 py-2 mb-1 rounded-lg transition-all duration-200 ease-spring group relative touch-manipulation',
+                  'motion-reduce:transition-none motion-reduce:hover:translate-x-0',
+                  deletingNoteId === note.id && 'animate-fadeOutSlideLeft motion-reduce:animate-none motion-reduce:opacity-0 pointer-events-none',
                   activeNoteId === note.id
-                    ? 'bg-stone-100 dark:bg-stone-800 text-stone-900 dark:text-stone-100'
-                    : 'hover:bg-stone-50 dark:hover:bg-stone-800/40 text-stone-600 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-200 active:bg-stone-100 dark:active:bg-stone-800/60'
+                    ? 'bg-stone-100 dark:bg-stone-800/80'
+                    : 'hover:bg-stone-50 dark:hover:bg-stone-800/50 hover:translate-x-0.5 hover:shadow-sm active:bg-stone-100 dark:active:bg-stone-800/70'
                 )}
               >
-              {/* Active Indicator */}
-              {activeNoteId === note.id && (
-                <div className="absolute left-0 top-1/2 h-5 w-1 bg-blue-600 rounded-r-full animate-slideInFromLeft" />
-              )}
+              {/* Active Indicator - always rendered for exit animation */}
+              <div className={clsx(
+                "absolute -left-0.5 top-2 bottom-2 w-0.5 bg-blue-500 rounded-full transition-all duration-200 ease-spring motion-reduce:transition-none",
+                activeNoteId === note.id
+                  ? "opacity-100 translate-x-0"
+                  : "opacity-0 -translate-x-full motion-reduce:hidden"
+              )} />
+              {/* Context menu hint - indicates right-click available */}
+              <div className="absolute right-8 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-30 transition-opacity duration-150 pointer-events-none">
+                <VscEllipsis size={14} className="text-stone-500 dark:text-stone-400" />
+              </div>
               <div className="flex items-start justify-between gap-2">
                 <button
+                  ref={(el) => el && noteRefs.current.set(note.id, el)}
                   onClick={() => setActiveNote(note.id)}
+                  tabIndex={activeNoteId === note.id ? 0 : -1}
                   className="flex-1 min-w-0 text-left focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-blue-600 focus-visible:ring-offset-3 rounded"
                   aria-label={`Select note: ${note.title}`}
-                  aria-current={activeNoteId === note.id ? 'true' : 'false'}
                 >
                   <h3 className={clsx(
-                    'truncate text-sm font-medium leading-snug pl-2 tracking-tight',
+                    'truncate text-base font-medium leading-snug tracking-tight',
                     activeNoteId === note.id
-                      ? 'text-stone-900 dark:text-stone-100'
-                      : 'text-stone-700 dark:text-stone-300 group-hover:text-stone-900 dark:group-hover:text-stone-200'
+                      ? 'text-stone-900 dark:text-stone-50'
+                      : 'text-stone-600 dark:text-stone-300 group-hover:text-stone-800 dark:group-hover:text-stone-100'
                   )}>
                     {note.title}
                   </h3>
@@ -126,14 +225,14 @@ export const Sidebar = ({ isMobile = false, onClose }: { isMobile?: boolean; onC
                     dateTime={timestamp.datetime}
                     aria-label={`Last edited ${timestamp.absolute}`}
                     title={timestamp.absolute}
-                    className="block text-xs mt-1 pl-2 text-stone-500 dark:text-stone-400"
+                    className="block text-xs mt-0.5 text-stone-400 dark:text-stone-500"
                   >
                     {timestamp.relative}
                   </time>
 
                   {/* Tags - minimal text-only display */}
                   {note.tags && note.tags.length > 0 && (
-                    <div className="flex items-center flex-wrap gap-1 md:gap-1.5 mt-1 md:mt-1.5 text-xs opacity-60">
+                    <div className="flex items-center flex-wrap gap-1.5 mt-1.5 text-xs text-stone-400 dark:text-stone-500">
                       {note.tags.slice(0, 3).map((tag, idx) => {
                         const colorMap: Record<string, string> = {
                           gray: '#78716c', red: '#ef4444', orange: '#f97316', amber: '#f59e0b',
@@ -158,8 +257,8 @@ export const Sidebar = ({ isMobile = false, onClose }: { isMobile?: boolean; onC
                   )}
                 </button>
                 <button
-                  onClick={(e) => handleDelete(e, note.id)}
-                  className="opacity-100 md:opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 text-stone-400 dark:text-stone-500 hover:text-red-600 dark:hover:text-red-400 transition-[opacity,color,background-color,transform] duration-200 flex-shrink-0 p-3 md:p-2 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-red-600 focus-visible:ring-offset-3 focus-visible:opacity-100 active:scale-[0.95]"
+                  onClick={(e) => handleDeleteClick(e, note.id, note.title)}
+                  className="opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 text-stone-400 dark:text-stone-500 hover:text-red-600 dark:hover:text-red-400 transition-[opacity,color,background-color,transform] duration-200 flex-shrink-0 p-2 -mr-1 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-red-600 focus-visible:ring-offset-3 focus-visible:opacity-100 active:scale-[0.95]"
                   title="Delete note"
                   aria-label={`Delete note: ${note.title}`}
                 >
@@ -183,7 +282,20 @@ export const Sidebar = ({ isMobile = false, onClose }: { isMobile?: boolean; onC
             </ContextMenu>
           );
         })}
+        </div>
       </div>
+
+      {/* Delete confirmation dialog */}
+      <ConfirmDialog
+        isOpen={deleteConfirm !== null}
+        onConfirm={handleConfirmDelete}
+        onCancel={handleCancelDelete}
+        title="Delete note?"
+        message={`"${deleteConfirm?.title}" will be permanently deleted. This action cannot be undone.`}
+        confirmLabel="Delete"
+        cancelLabel="Cancel"
+        variant="danger"
+      />
     </aside>
   );
 };

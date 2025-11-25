@@ -80,13 +80,15 @@ export const FloatingMenu = ({ editor }: FloatingMenuProps) => {
   return (
     <div
       ref={menuRef}
-      className="fixed bg-white dark:bg-stone-800 border border-stone-200 dark:border-stone-700 rounded-lg shadow-elevation-4 p-1 flex items-center gap-0.5 z-50 animate-fadeInSlideUp"
+      className="fixed backdrop-blur-xl bg-white/90 dark:bg-stone-900/90 border border-stone-200/40 dark:border-stone-700/40 rounded-xl shadow-elevation-4 p-1 flex items-center gap-0.5 z-50 animate-fadeInSlideUp"
       role="toolbar"
       aria-label="Insert menu"
     >
+      {/* Inner glow overlay for glass depth */}
+      <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-white/40 via-transparent to-transparent dark:from-white/5 pointer-events-none" aria-hidden="true" />
       <button
         onClick={() => editor.chain().focus().setHeading({ level: 1 }).run()}
-        className="p-2 text-stone-500 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-200 hover:bg-stone-100 dark:hover:bg-stone-700 rounded-md transition-colors duration-150"
+        className="relative p-2 text-stone-500 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-200 hover:bg-stone-100/80 dark:hover:bg-stone-700/80 rounded-md transition-colors duration-150"
         aria-label="Heading 1"
       >
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -95,7 +97,7 @@ export const FloatingMenu = ({ editor }: FloatingMenuProps) => {
       </button>
       <button
         onClick={() => editor.chain().focus().setHeading({ level: 2 }).run()}
-        className="p-2 text-stone-500 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-200 hover:bg-stone-100 dark:hover:bg-stone-700 rounded-md transition-colors duration-150"
+        className="relative p-2 text-stone-500 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-200 hover:bg-stone-100/80 dark:hover:bg-stone-700/80 rounded-md transition-colors duration-150"
         aria-label="Heading 2"
       >
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -104,7 +106,7 @@ export const FloatingMenu = ({ editor }: FloatingMenuProps) => {
       </button>
       <button
         onClick={() => editor.chain().focus().toggleBulletList().run()}
-        className="p-2 text-stone-500 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-200 hover:bg-stone-100 dark:hover:bg-stone-700 rounded-md transition-colors duration-150"
+        className="relative p-2 text-stone-500 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-200 hover:bg-stone-100/80 dark:hover:bg-stone-700/80 rounded-md transition-colors duration-150"
         aria-label="Bullet List"
       >
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -118,7 +120,7 @@ export const FloatingMenu = ({ editor }: FloatingMenuProps) => {
       </button>
       <button
         onClick={() => editor.chain().focus().setExecutableCodeBlock().run()}
-        className="p-2 text-stone-500 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-200 hover:bg-stone-100 dark:hover:bg-stone-700 rounded-md transition-colors duration-150"
+        className="relative p-2 text-stone-500 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-200 hover:bg-stone-100/80 dark:hover:bg-stone-700/80 rounded-md transition-colors duration-150"
         aria-label="Code Block"
         title="Insert code block"
       >

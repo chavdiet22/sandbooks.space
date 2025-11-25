@@ -40,6 +40,7 @@ import { MinimalTagDisplay } from '../Tags';
 import { ImageUploadModal } from './ImageUploadModal';
 import { Markdown } from '@tiptap/markdown';
 import { useTypewriterMode } from '../../hooks/useTypewriterMode';
+import { useCounterOverlapOffset } from '../../hooks/useCounterOverlapOffset';
 import { useNotesStore } from '../../store/notesStore';
 import type { Note } from '../../types';
 import type { JSONContent } from '@tiptap/core';
@@ -62,6 +63,8 @@ export const Editor = ({ note, onUpdate, readOnly = false }: EditorProps) => {
   const [droppedFiles, setDroppedFiles] = useState<FileList | null>(null);
   const [showLinkPopover, setShowLinkPopover] = useState(false);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const tagsBarRef = useRef<HTMLDivElement>(null);
+  const counterRef = useRef<HTMLDivElement>(null);
 
   const editor = useEditor({
     extensions: [
@@ -292,6 +295,15 @@ export const Editor = ({ note, onUpdate, readOnly = false }: EditorProps) => {
   // Typewriter mode - keep cursor centered while typing
   useTypewriterMode(editor, typewriterModeEnabled);
 
+  // Counter overlap detection - prevents counter from overlapping tags bar
+  useCounterOverlapOffset({
+    scrollContainerRef,
+    tagsBarRef,
+    counterRef,
+    padding: 12,
+    enabled: !!(editor && editor.storage.characterCount),
+  });
+
   // Handle Cmd+K for link insertion
   useEffect(() => {
     if (!editor) return;
@@ -451,16 +463,30 @@ export const Editor = ({ note, onUpdate, readOnly = false }: EditorProps) => {
 
         {/* Minimal tags at bottom */}
         <div className="max-w-4xl mx-auto w-full">
-          <MinimalTagDisplay noteId={note.id} tags={note.tags || []} />
+          <MinimalTagDisplay ref={tagsBarRef} noteId={note.id} tags={note.tags || []} />
         </div>
 
-        {/* Character Count - positioned bottom-left to avoid overlap with reset notes button */}
+        {/* Character Count - glass chip with overlap avoidance */}
         {editor && editor.storage.characterCount && (
-          <div className="fixed bottom-4 left-4 md:left-[17rem] lg:left-[19rem] bg-white/90 dark:bg-stone-900/90 backdrop-blur-sm border border-stone-200 dark:border-stone-700 rounded-lg px-3 py-1.5 shadow-elevation-1 z-40">
-            <div className="text-xs text-stone-500 dark:text-stone-400 font-mono space-x-2">
-              <span>{editor.storage.characterCount.words()} words</span>
-              <span>•</span>
-              <span>{editor.storage.characterCount.characters()} characters</span>
+          <div
+            ref={counterRef}
+            className="fixed bottom-4 right-4 z-40 backdrop-blur-md backdrop-saturate-150 bg-white/75 dark:bg-stone-900/75 border border-stone-200/40 dark:border-stone-700/40 rounded-xl px-3 py-1.5 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.08),0_4px_16px_-4px_rgba(0,0,0,0.06)] dark:shadow-[0_2px_8px_-2px_rgba(0,0,0,0.3),0_4px_16px_-4px_rgba(0,0,0,0.2)] will-change-transform transform-gpu transition-transform duration-200 ease-out hover:bg-white/85 dark:hover:bg-stone-900/85 hover:scale-[1.02]"
+            role="status"
+            aria-live="polite"
+            aria-label={`${editor.storage.characterCount.words()} words, ${editor.storage.characterCount.characters()} characters`}
+          >
+            {/* Inner glow overlay for glass thickness illusion */}
+            <div
+              className="absolute inset-0 rounded-xl bg-gradient-to-br from-white/20 via-transparent to-transparent dark:from-white/5 pointer-events-none"
+              aria-hidden="true"
+            />
+            {/* Content */}
+            <div className="relative text-xs text-stone-500 dark:text-stone-400 font-mono flex items-center gap-2">
+              <span className="tabular-nums">{editor.storage.characterCount.words().toLocaleString()}</span>
+              <span className="text-stone-300 dark:text-stone-600">words</span>
+              <span className="text-stone-300 dark:text-stone-600 mx-0.5">·</span>
+              <span className="tabular-nums">{editor.storage.characterCount.characters().toLocaleString()}</span>
+              <span className="text-stone-300 dark:text-stone-600">chars</span>
             </div>
           </div>
         )}

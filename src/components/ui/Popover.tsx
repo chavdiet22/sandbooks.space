@@ -91,16 +91,23 @@ export const Popover = ({
                     ref={contentRef}
                     className={clsx(
                         "absolute top-full mt-2 z-50 min-w-[200px]",
-                        "bg-white dark:bg-stone-900 rounded-xl shadow-xl border border-stone-200 dark:border-stone-800",
+                        // Glass morphism
+                        "backdrop-blur-xl bg-white/90 dark:bg-stone-900/90",
+                        "rounded-xl shadow-elevation-4",
+                        "border border-stone-200/40 dark:border-stone-700/40",
                         "transition-all duration-150 ease-out",
                         isClosing
                             ? "opacity-0 scale-95"
-                            : "opacity-100 scale-100 animate-in fade-in zoom-in-95 duration-200",
+                            : "opacity-100 scale-100 animate-fadeInSlideUp",
                         alignmentStyles[align],
                         className
                     )}
                 >
-                    {content}
+                    {/* Inner glow overlay for glass depth */}
+                    <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-white/40 via-transparent to-transparent dark:from-white/5 pointer-events-none" aria-hidden="true" />
+                    <div className="relative">
+                        {content}
+                    </div>
                 </div>
             )}
         </div>

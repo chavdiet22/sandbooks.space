@@ -110,7 +110,7 @@ export const InstallPrompt = () => {
   }
 
   return (
-    <div className="fixed bottom-6 right-6 z-50 max-w-sm animate-fadeInSlideUp">
+    <div className="fixed bottom-32 right-4 z-50 max-w-sm animate-fadeInSlideUp">
       <div className="glass-modal rounded-2xl p-6 shadow-elevation-4 border border-stone-200/20 dark:border-stone-700/20">
         <div className="flex items-start gap-4">
           <div className="flex-shrink-0">

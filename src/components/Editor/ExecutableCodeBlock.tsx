@@ -206,9 +206,12 @@ export const ExecutableCodeBlockComponent = ({ node, updateAttributes }: NodeVie
 
   return (
     <NodeViewWrapper className="executable-code-block not-prose my-8 max-w-4xl mx-auto group" data-type="executable-code-block">
-      <div className="border-2 border-stone-300 dark:border-stone-700 rounded-xl overflow-hidden bg-white dark:bg-stone-800 transition-all duration-200 hover:border-blue-500 dark:hover:border-blue-500 shadow-code-block">
-        {/* Code Block Header - Minimal Icon-Only Design */}
-        <div className="flex items-center justify-between px-4 py-2.5 bg-stone-50 dark:bg-gradient-to-br dark:from-stone-800 dark:via-stone-900 dark:to-black border-b border-stone-200 dark:border-stone-700/50">
+      <div className="relative border border-stone-200/60 dark:border-stone-700/50 rounded-xl overflow-hidden bg-white/95 dark:bg-stone-900/95 backdrop-blur-sm transition-all duration-200 hover:border-blue-500/60 dark:hover:border-blue-500/60 shadow-elevation-2 hover:shadow-elevation-3">
+        {/* Inner glow overlay for glass depth */}
+        <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-white/30 via-transparent to-transparent dark:from-white/5 pointer-events-none" aria-hidden="true" />
+
+        {/* Code Block Header */}
+        <div className="relative flex items-center justify-between px-4 py-2.5 bg-stone-50/80 dark:bg-stone-800/80 border-b border-stone-200/50 dark:border-stone-700/50">
           {/* Language Selector */}
           <div className="relative">
             <div className="flex items-center gap-2">
@@ -284,22 +287,22 @@ export const ExecutableCodeBlockComponent = ({ node, updateAttributes }: NodeVie
               </Button>
             )}
             <Button
-              variant="primary-subtle"
+              variant="default"
               onClick={handleExecute}
               disabled={isExecuting || sandboxStatus === 'creating'}
-              className="gap-2 hover:shadow-md"
+              className="gap-2 px-3 py-1.5 !bg-emerald-600 hover:!bg-emerald-500 !text-white shadow-sm hover:shadow-md transition-all duration-200"
               aria-label={isExecuting ? 'Code is executing' : 'Run code'}
               aria-busy={isExecuting}
-              title={isExecuting ? 'Running...' : 'Run code'}
+              title={isExecuting ? 'Running...' : 'Run code (⌘+Enter)'}
             >
               {isExecuting ? (
-                <div className="w-5 h-5 border-2 border-emerald-500 dark:border-emerald-400 border-t-transparent rounded-full animate-spin" />
+                <div className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
               ) : (
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" />
                 </svg>
               )}
+              <span className="text-sm font-medium">Run</span>
             </Button>
           </div>
         </div>
@@ -319,26 +322,26 @@ export const ExecutableCodeBlockComponent = ({ node, updateAttributes }: NodeVie
 
         {/* Live Running Indicator */}
         {isExecuting && (
-          <div className="border-t border-stone-200 dark:border-stone-700 animate-fadeInSlideUp">
-            <div className="px-5 py-4 bg-gradient-to-r from-blue-50 to-emerald-50 dark:from-blue-900/20 dark:to-emerald-900/20">
+          <div className="relative border-t border-stone-200/50 dark:border-stone-700/50 animate-fadeInSlideUp">
+            <div className="px-5 py-4 bg-blue-50/80 dark:bg-blue-900/20 backdrop-blur-sm">
               <div className="flex items-center gap-3">
                 {/* Animated dots */}
-                <div className="flex gap-1">
-                  <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse" style={{ animationDelay: '0ms' }} />
-                  <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse" style={{ animationDelay: '150ms' }} />
-                  <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse" style={{ animationDelay: '300ms' }} />
+                <div className="flex gap-1.5">
+                  <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" style={{ animationDelay: '0ms' }} />
+                  <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" style={{ animationDelay: '150ms' }} />
+                  <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" style={{ animationDelay: '300ms' }} />
                 </div>
-                <span className="text-sm font-medium text-blue-700 dark:text-blue-300">
+                <span className="text-sm font-medium text-emerald-700 dark:text-emerald-300">
                   Running...
                 </span>
-                <span className="text-sm font-mono text-stone-600 dark:text-stone-400 tabular-nums">
+                <span className="text-sm font-mono text-stone-500 dark:text-stone-400 tabular-nums">
                   {formatElapsedTime(elapsedTime)}
                 </span>
               </div>
               {elapsedTime > 5000 && (
                 <p className="mt-2 text-xs text-stone-500 dark:text-stone-400">
                   {elapsedTime > 30000
-                    ? 'Long-running operation (pip install, network requests, etc.)...'
+                    ? 'Long-running operation...'
                     : 'This may take a moment...'}
                 </p>
               )}
@@ -348,10 +351,10 @@ export const ExecutableCodeBlockComponent = ({ node, updateAttributes }: NodeVie
 
         {/* Execution Output */}
         {!isExecuting && (jupyterOutputs || executionResult) && (
-          <div className="border-t border-stone-200 dark:border-stone-700 animate-fadeInSlideUp">
+          <div className="relative border-t border-stone-200/50 dark:border-stone-700/50 animate-fadeInSlideUp">
             {/* Jupyter Outputs (for Python) */}
             {language === 'python' && jupyterOutputs && (
-              <div className="px-5 py-4">
+              <div className="relative px-5 py-4 bg-white/80 dark:bg-stone-800/80 backdrop-blur-sm">
                 <NotebookOutput outputs={jupyterOutputs} />
               </div>
             )}
@@ -361,9 +364,9 @@ export const ExecutableCodeBlockComponent = ({ node, updateAttributes }: NodeVie
               <>
                 {/* Stdout */}
                 {executionResult.stdout && (
-                  <div className="output-section group/output relative px-5 py-4 bg-white dark:bg-stone-800 border-b border-stone-100 dark:border-stone-700">
-                    <div className="text-xs font-semibold text-emerald-700 dark:text-emerald-400 mb-3 flex items-center gap-2">
-                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                  <div className="output-section group/output relative px-5 py-4 bg-white/90 dark:bg-stone-800/90 backdrop-blur-sm border-b border-stone-200/50 dark:border-stone-700/50">
+                    <div className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 mb-3 flex items-center gap-2">
+                      <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                       </svg>
                       Output
@@ -376,77 +379,68 @@ export const ExecutableCodeBlockComponent = ({ node, updateAttributes }: NodeVie
                       aria-label="Copy output"
                       title="Copy output"
                     />
-                    <pre className="code-output text-base font-mono text-stone-800 dark:text-stone-200 whitespace-pre-wrap bg-stone-50 dark:bg-stone-900 p-3 rounded-lg border border-stone-200 dark:border-stone-700 max-h-[400px] overflow-y-auto">
+                    <pre className="code-output text-sm font-mono text-stone-800 dark:text-stone-200 whitespace-pre-wrap bg-stone-50/80 dark:bg-stone-900/80 p-3 rounded-lg border border-stone-200/50 dark:border-stone-700/50 max-h-[400px] overflow-y-auto">
                       {executionResult.stdout}
                     </pre>
                   </div>
                 )}
 
-                {/* Stderr */}
-                {executionResult.stderr && (
-                  <div className="output-section group/output relative px-5 py-4 bg-red-50 dark:bg-red-900/20 border-t border-red-200 dark:border-red-900/30">
-                    <div className="text-xs font-semibold text-red-700 dark:text-red-400 mb-3 flex items-center gap-2">
-                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M18 5v8a2 2 0 01-2 2h-5l-5 4v-4H4a2 2 0 01-2-2V5a2 2 0 012-2h12a2 2 0 012 2zm-11-1a1 1 0 11-2 0 1 1 0 012 0z" clipRule="evenodd" />
-                      </svg>
-                      Error Output
-                    </div>
-                    <CopyButton
-                      text={executionResult.stderr}
-                      size="sm"
-                      variant="icon-only"
-                      className="output-copy-btn absolute top-3 right-3 opacity-0 group-hover/output:opacity-100 focus-visible:opacity-100 transition-opacity duration-150"
-                      aria-label="Copy error output"
-                      title="Copy error output"
-                    />
-                    <pre className="code-output text-base font-mono text-red-800 dark:text-red-300 whitespace-pre-wrap bg-white dark:bg-stone-900 p-4 rounded-lg border border-red-200 dark:border-red-900/30 max-h-[300px] overflow-y-auto">
-                      {executionResult.stderr}
-                    </pre>
-                  </div>
-                )}
+                {/* Error Output - Consolidated (show stderr or error, avoiding duplicates) */}
+                {(executionResult.stderr || executionResult.error) && (() => {
+                  // Prefer stderr if available, otherwise use error
+                  // Only show error separately if it's different from stderr
+                  const errorText = executionResult.stderr || executionResult.error || '';
+                  const hasDistinctError = executionResult.error && executionResult.stderr &&
+                    executionResult.error !== executionResult.stderr;
 
-                {/* Error */}
-                {executionResult.error && (
-                  <div className="output-section group/output relative px-5 py-4 bg-red-50 dark:bg-red-900/20 border-t border-red-200 dark:border-red-900/30">
-                    <div className="text-xs font-semibold text-red-700 dark:text-red-400 mb-3 flex items-center gap-2">
-                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                      </svg>
-                      Error
+                  return (
+                    <div className="output-section group/output relative px-5 py-4 bg-red-50/80 dark:bg-red-900/20 backdrop-blur-sm border-t border-red-200/50 dark:border-red-900/30">
+                      <div className="text-xs font-semibold text-red-600 dark:text-red-400 mb-3 flex items-center gap-2">
+                        <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                        </svg>
+                        Error
+                      </div>
+                      <CopyButton
+                        text={hasDistinctError ? `${executionResult.stderr}\n\n${executionResult.error}` : errorText}
+                        size="sm"
+                        variant="icon-only"
+                        className="output-copy-btn absolute top-3 right-3 opacity-0 group-hover/output:opacity-100 focus-visible:opacity-100 transition-opacity duration-150"
+                        aria-label="Copy error"
+                        title="Copy error"
+                      />
+                      <pre className="code-output text-sm font-mono text-red-700 dark:text-red-300 whitespace-pre-wrap bg-white/80 dark:bg-stone-900/80 p-3 rounded-lg border border-red-200/50 dark:border-red-900/30 max-h-[300px] overflow-y-auto">
+                        {errorText}
+                        {hasDistinctError && (
+                          <>
+                            {'\n\n--- Additional Error Info ---\n\n'}
+                            {executionResult.error}
+                          </>
+                        )}
+                      </pre>
                     </div>
-                    <CopyButton
-                      text={executionResult.error}
-                      size="sm"
-                      variant="icon-only"
-                      className="output-copy-btn absolute top-3 right-3 opacity-0 group-hover/output:opacity-100 focus-visible:opacity-100 transition-opacity duration-150"
-                      aria-label="Copy error"
-                      title="Copy error"
-                    />
-                    <pre className="code-output text-base font-mono text-red-800 dark:text-red-300 whitespace-pre-wrap bg-white dark:bg-stone-900 p-4 rounded-lg border border-red-200 dark:border-red-900/30 max-h-[300px] overflow-y-auto">
-                      {executionResult.error}
-                    </pre>
-                  </div>
-                )}
+                  );
+                })()}
 
                 {/* Rich Outputs (images, charts) */}
                 {executionResult.richOutputs && executionResult.richOutputs.length > 0 && (
-                  <div className="px-5 py-4 border-t border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-800">
-                    <div className="text-xs font-semibold text-stone-700 dark:text-stone-300 mb-4 flex items-center gap-2">
-                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                  <div className="px-5 py-4 border-t border-stone-200/50 dark:border-stone-700/50 bg-white/90 dark:bg-stone-800/90 backdrop-blur-sm">
+                    <div className="text-xs font-semibold text-stone-600 dark:text-stone-300 mb-4 flex items-center gap-2">
+                      <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
                         <path d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" />
                       </svg>
                       Rich Output
                     </div>
                     {executionResult.richOutputs.map((output, idx) => (
-                      <div key={idx} className="mb-4">
+                      <div key={idx} className="mb-4 last:mb-0">
                         {output.type === 'image/png' || output.type === 'image/jpeg' ? (
                           <img
                             src={`data:${output.type};base64,${output.data}`}
                             alt={`Output ${idx}`}
-                            className="max-w-full h-auto rounded-lg border border-stone-200 shadow-md"
+                            className="max-w-full h-auto rounded-lg border border-stone-200/50 dark:border-stone-700/50 shadow-sm"
                           />
                         ) : (
-                          <pre className="code-output text-base font-mono text-stone-700 dark:text-stone-300 whitespace-pre-wrap bg-stone-50 dark:bg-stone-900 p-4 rounded-lg border border-stone-200 dark:border-stone-700">
+                          <pre className="code-output text-sm font-mono text-stone-700 dark:text-stone-300 whitespace-pre-wrap bg-stone-50/80 dark:bg-stone-900/80 p-3 rounded-lg border border-stone-200/50 dark:border-stone-700/50">
                             {output.data}
                           </pre>
                         )}
@@ -459,11 +453,11 @@ export const ExecutableCodeBlockComponent = ({ node, updateAttributes }: NodeVie
 
             {/* Execution Time */}
             {executionResult && executionResult.executionTime !== undefined && (
-              <div className="px-5 py-3 bg-stone-100 dark:bg-stone-800 border-t border-stone-200 dark:border-stone-700 text-xs text-stone-600 dark:text-stone-400 font-medium flex items-center gap-2">
-                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v3.586L7.707 9.293a1 1 0 00-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 10.586V7z" clipRule="evenodd" />
+              <div className="relative px-5 py-2.5 bg-stone-50/80 dark:bg-stone-800/80 backdrop-blur-sm border-t border-stone-200/50 dark:border-stone-700/50 text-xs text-stone-500 dark:text-stone-400 font-medium flex items-center gap-2">
+                <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
                 </svg>
-                Executed in {executionResult.executionTime}ms
+                {executionResult.executionTime}ms
               </div>
             )}
           </div>

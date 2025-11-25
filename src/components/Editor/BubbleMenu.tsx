@@ -73,17 +73,19 @@ export const BubbleMenu = ({ editor }: BubbleMenuProps) => {
   return (
     <div
       ref={menuRef}
-      className="fixed bg-white dark:bg-stone-800 border border-stone-200 dark:border-stone-700 rounded-lg shadow-elevation-4 p-1 flex items-center gap-0.5 z-50 animate-fadeInSlideUp"
+      className="fixed backdrop-blur-xl bg-white/90 dark:bg-stone-900/90 border border-stone-200/40 dark:border-stone-700/40 rounded-xl shadow-elevation-4 p-1 flex items-center gap-0.5 z-50 animate-fadeInSlideUp"
       role="toolbar"
       aria-label="Formatting menu"
     >
+      {/* Inner glow overlay for glass depth */}
+      <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-white/40 via-transparent to-transparent dark:from-white/5 pointer-events-none" aria-hidden="true" />
       <button
         onClick={() => editor.chain().focus().toggleBold().run()}
         className={clsx(
-          'p-2 rounded-md transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500',
+          'relative p-2 rounded-md transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500',
           editor.isActive('bold')
-            ? 'bg-stone-100 dark:bg-stone-700 text-stone-900 dark:text-stone-50'
-            : 'text-stone-500 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-200 hover:bg-stone-100 dark:hover:bg-stone-700'
+            ? 'bg-stone-100/80 dark:bg-stone-700/80 text-stone-900 dark:text-stone-50'
+            : 'text-stone-500 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-200 hover:bg-stone-100/80 dark:hover:bg-stone-700/80'
         )}
         aria-label="Bold"
       >
@@ -95,10 +97,10 @@ export const BubbleMenu = ({ editor }: BubbleMenuProps) => {
       <button
         onClick={() => editor.chain().focus().toggleItalic().run()}
         className={clsx(
-          'p-2 rounded-md transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500',
+          'relative p-2 rounded-md transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500',
           editor.isActive('italic')
-            ? 'bg-stone-100 dark:bg-stone-700 text-stone-900 dark:text-stone-50'
-            : 'text-stone-500 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-200 hover:bg-stone-100 dark:hover:bg-stone-700'
+            ? 'bg-stone-100/80 dark:bg-stone-700/80 text-stone-900 dark:text-stone-50'
+            : 'text-stone-500 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-200 hover:bg-stone-100/80 dark:hover:bg-stone-700/80'
         )}
         aria-label="Italic"
       >
@@ -111,10 +113,10 @@ export const BubbleMenu = ({ editor }: BubbleMenuProps) => {
       <button
         onClick={() => editor.chain().focus().toggleUnderline().run()}
         className={clsx(
-          'p-2 rounded-md transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500',
+          'relative p-2 rounded-md transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500',
           editor.isActive('underline')
-            ? 'bg-stone-100 dark:bg-stone-700 text-stone-900 dark:text-stone-50'
-            : 'text-stone-500 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-200 hover:bg-stone-100 dark:hover:bg-stone-700'
+            ? 'bg-stone-100/80 dark:bg-stone-700/80 text-stone-900 dark:text-stone-50'
+            : 'text-stone-500 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-200 hover:bg-stone-100/80 dark:hover:bg-stone-700/80'
         )}
         aria-label="Underline"
       >
@@ -125,10 +127,10 @@ export const BubbleMenu = ({ editor }: BubbleMenuProps) => {
       <button
         onClick={() => editor.chain().focus().toggleLink().run()}
         className={clsx(
-          'p-2 rounded-md transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500',
+          'relative p-2 rounded-md transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500',
           editor.isActive('link')
-            ? 'bg-stone-100 dark:bg-stone-700 text-stone-900 dark:text-stone-50'
-            : 'text-stone-500 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-200 hover:bg-stone-100 dark:hover:bg-stone-700'
+            ? 'bg-stone-100/80 dark:bg-stone-700/80 text-stone-900 dark:text-stone-50'
+            : 'text-stone-500 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-200 hover:bg-stone-100/80 dark:hover:bg-stone-700/80'
         )}
         aria-label="Link"
       >

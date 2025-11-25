@@ -2,20 +2,15 @@ import { useNotesStore } from '../../store/notesStore';
 import clsx from 'clsx';
 
 /**
- * EditorModeIndicator - Modern glass morphism status indicator
+ * EditorModeIndicator - Unified glass morphism status indicators
  *
  * Design Philosophy:
- * - Tiny glass objects with simple shapes (Pills, not buttons)
- * - Appears contextually (only when modes are active)
- * - Bottom-right corner (mobile-inspired Control Center pattern)
- * - Subtle and non-intrusive
- * - Layered depth with translucency
- *
- * Interaction:
- * - Click to toggle mode directly
- * - Keyboard shortcuts still work (⌘⌥T, ⌘⌥F)
- * - Hover shows label
- * - No visual clutter when disabled
+ * - Cohesive glass material matching the word counter
+ * - Single container with horizontal icon layout
+ * - Positioned above counter to avoid overlap
+ * - Icon-only for minimal footprint, labels via tooltip
+ * - Smooth enter/exit animations
+ * - Respects reduced motion preferences
  */
 export const EditorModeIndicator = () => {
   const { typewriterModeEnabled, focusModeEnabled, toggleTypewriterMode, toggleFocusMode } = useNotesStore();
@@ -27,136 +22,129 @@ export const EditorModeIndicator = () => {
 
   return (
     <div
-      className="fixed bottom-14 right-4 md:bottom-6 md:right-6 z-30 flex flex-col md:flex-row items-end md:items-center gap-2"
+      className={clsx(
+        // Position: above the counter with clearance
+        'fixed bottom-16 right-4 z-40',
+        // Glass morphism base (matching counter exactly)
+        'backdrop-blur-md backdrop-saturate-150',
+        'bg-white/75 dark:bg-stone-900/75',
+        'border border-stone-200/40 dark:border-stone-700/40',
+        // Shape
+        'rounded-xl',
+        // Shadow (matching counter)
+        'shadow-[0_2px_8px_-2px_rgba(0,0,0,0.08),0_4px_16px_-4px_rgba(0,0,0,0.06)]',
+        'dark:shadow-[0_2px_8px_-2px_rgba(0,0,0,0.3),0_4px_16px_-4px_rgba(0,0,0,0.2)]',
+        // Layout
+        'flex items-center gap-1 p-1',
+        // Animation (uses project's fadeInSlideUp keyframe)
+        'animate-fadeInSlideUp',
+        'motion-reduce:animate-none motion-reduce:opacity-100'
+      )}
       role="status"
       aria-live="polite"
       aria-label={`Editor modes: ${typewriterModeEnabled ? 'Typewriter' : ''} ${focusModeEnabled ? 'Focus' : ''}`}
     >
-      {/* Typewriter Mode Indicator */}
+      {/* Inner glow overlay for glass thickness illusion */}
+      <div
+        className="absolute inset-0 rounded-xl bg-gradient-to-br from-white/20 via-transparent to-transparent dark:from-white/5 pointer-events-none"
+        aria-hidden="true"
+      />
+
+      {/* Typewriter Mode Button */}
       {typewriterModeEnabled && (
         <button
           onClick={toggleTypewriterMode}
           className={clsx(
-            // Glass morphism base
-            'group relative overflow-hidden',
-            'backdrop-blur-md backdrop-saturate-150',
-            'bg-white/80 dark:bg-stone-900/80',
-            'border border-stone-200/50 dark:border-stone-700/50',
-            // Shape and size
-            'rounded-full px-3 py-1.5',
-            'flex items-center gap-1.5',
-            // Elevation and depth
-            'shadow-lg shadow-stone-900/10 dark:shadow-black/40',
-            // Transitions
-            'transition-all duration-300 ease-out',
-            // Hover state
-            'hover:scale-105 hover:shadow-xl',
-            'hover:bg-white/90 dark:hover:bg-stone-900/90',
-            'hover:border-blue-300/60 dark:hover:border-blue-500/60',
-            // Focus state (accessibility)
-            'focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-blue-600/50 focus-visible:ring-offset-2',
-            // Active state
+            'group relative',
+            'p-2 rounded-lg',
+            'transition-all duration-200 ease-out',
+            // Hover
+            'hover:bg-blue-500/10 dark:hover:bg-blue-400/10',
+            'hover:scale-105',
+            // Active
             'active:scale-95',
+            // Focus
+            'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50 focus-visible:ring-offset-1',
             // GPU acceleration
             'will-change-transform'
           )}
-          title="Typewriter mode active (⌘⌥T to toggle) - Keeps cursor centered while typing"
-          aria-label="Typewriter mode active. Automatically scrolls to keep cursor centered vertically while typing. Click to disable."
+          title="Typewriter mode (⌘⌥T) · Keeps cursor centered"
+          aria-label="Typewriter mode active. Click to disable."
         >
-          {/* Gradient overlay for depth */}
-          <div
-            className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-full"
-            aria-hidden="true"
-          />
-
-          {/* Icon: Cursor centered in document */}
+          {/* Icon: Centered cursor */}
           <svg
-            className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400 relative z-10"
+            className="w-4 h-4 text-blue-600 dark:text-blue-400 relative z-10 transition-transform duration-200 group-hover:scale-110"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
-            strokeWidth={2.5}
+            strokeWidth={2}
             aria-hidden="true"
           >
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m0 0l-4-4m4 4l4-4" />
-            <line x1="8" y1="12" x2="16" y2="12" strokeWidth={2.5} strokeLinecap="round" />
+            {/* Vertical line with arrows */}
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16" />
+            <path strokeLinecap="round" strokeLinejoin="round" d="M8 8l4-4 4 4" />
+            <path strokeLinecap="round" strokeLinejoin="round" d="M8 16l4 4 4-4" />
+            {/* Center dot */}
+            <circle cx="12" cy="12" r="2" fill="currentColor" stroke="none" />
           </svg>
 
-          {/* Label */}
-          <span className="text-xs font-medium text-stone-700 dark:text-stone-300 tracking-wide relative z-10">
-            Typewriter
-          </span>
-
-          {/* Animated pulse (subtle) */}
+          {/* Subtle active indicator dot */}
           <div
-            className="absolute inset-0 rounded-full bg-blue-400/20 dark:bg-blue-500/20 animate-pulse"
+            className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-blue-500 dark:bg-blue-400 animate-pulse"
+            style={{ animationDuration: '2s' }}
             aria-hidden="true"
-            style={{ animationDuration: '3s' }}
           />
         </button>
       )}
 
-      {/* Focus Mode Indicator */}
+      {/* Divider when both modes active */}
+      {typewriterModeEnabled && focusModeEnabled && (
+        <div
+          className="w-px h-4 bg-stone-300/50 dark:bg-stone-600/50"
+          aria-hidden="true"
+        />
+      )}
+
+      {/* Focus Mode Button */}
       {focusModeEnabled && (
         <button
           onClick={toggleFocusMode}
           className={clsx(
-            // Glass morphism base
-            'group relative overflow-hidden',
-            'backdrop-blur-md backdrop-saturate-150',
-            'bg-white/80 dark:bg-stone-900/80',
-            'border border-stone-200/50 dark:border-stone-700/50',
-            // Shape and size
-            'rounded-full px-3 py-1.5',
-            'flex items-center gap-1.5',
-            // Elevation and depth
-            'shadow-lg shadow-stone-900/10 dark:shadow-black/40',
-            // Transitions
-            'transition-all duration-300 ease-out',
-            // Hover state
-            'hover:scale-105 hover:shadow-xl',
-            'hover:bg-white/90 dark:hover:bg-stone-900/90',
-            'hover:border-purple-300/60 dark:hover:border-purple-500/60',
-            // Focus state (accessibility)
-            'focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-purple-600/50 focus-visible:ring-offset-2',
-            // Active state
+            'group relative',
+            'p-2 rounded-lg',
+            'transition-all duration-200 ease-out',
+            // Hover
+            'hover:bg-purple-500/10 dark:hover:bg-purple-400/10',
+            'hover:scale-105',
+            // Active
             'active:scale-95',
+            // Focus
+            'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500/50 focus-visible:ring-offset-1',
             // GPU acceleration
             'will-change-transform'
           )}
-          title="Focus mode active (⌘⇧F to toggle)"
+          title="Focus mode (⌘⇧F) · Dims non-active paragraphs"
           aria-label="Focus mode active. Click to disable."
         >
-          {/* Gradient overlay for depth */}
-          <div
-            className="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-full"
-            aria-hidden="true"
-          />
-
-          {/* Icon: Target/focus circles */}
+          {/* Icon: Target/focus */}
           <svg
-            className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400 relative z-10"
+            className="w-4 h-4 text-purple-600 dark:text-purple-400 relative z-10 transition-transform duration-200 group-hover:scale-110"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
-            strokeWidth={2.5}
+            strokeWidth={2}
             aria-hidden="true"
           >
             <circle cx="12" cy="12" r="8" />
             <circle cx="12" cy="12" r="4" />
-            <circle cx="12" cy="12" r="1.5" fill="currentColor" />
+            <circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none" />
           </svg>
 
-          {/* Label */}
-          <span className="text-xs font-medium text-stone-700 dark:text-stone-300 tracking-wide relative z-10">
-            Focus
-          </span>
-
-          {/* Animated pulse (subtle) */}
+          {/* Subtle active indicator dot */}
           <div
-            className="absolute inset-0 rounded-full bg-purple-400/20 dark:bg-purple-500/20 animate-pulse"
+            className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-purple-500 dark:bg-purple-400 animate-pulse"
+            style={{ animationDuration: '2s' }}
             aria-hidden="true"
-            style={{ animationDuration: '3s' }}
           />
         </button>
       )}

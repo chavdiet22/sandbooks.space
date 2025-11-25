@@ -20,7 +20,8 @@ test.describe('Core Application Flow', () => {
 
   test('loads and shows primary actions', async ({ page }) => {
     await expect(page).toHaveTitle('Sandbooks - Executable Notes for Developers');
-    await expect(page.getByText('dev notes')).toBeVisible();
+    // Header shows "dev" badge (compact design)
+    await expect(page.getByText('dev')).toBeVisible();
     await expect(page.getByLabel(/Create new note/i)).toBeVisible();
     // Verify header has action buttons (dark mode, terminal, new note)
     const header = page.locator('header');
@@ -38,32 +39,12 @@ test.describe('Core Application Flow', () => {
     expect(scrollable).toBe(true);
   });
 
-  // Skipped: UI toggle (data-testid="execution-toggle") not implemented.
-  // See terminal-local-mode.spec.ts for details on enabling this test.
-  test.skip('execution mode toggle updates state', async ({ page }) => {
-    // Find the execution mode toggle button (title changes based on mode)
-    const toggleButton = page.getByTestId('execution-toggle');
-    await expect(toggleButton).toBeVisible();
-    
-    // Get initial title
-    const initialTitle = await toggleButton.getAttribute('title');
-    
-    // Click to toggle
-    await toggleButton.click();
-    await page.waitForTimeout(1000); // Wait for mode change
-    
-    // Verify state changed (button title should change)
-    const newTitle = await toggleButton.getAttribute('title');
-    expect(newTitle).not.toBe(initialTitle);
-    await expect(toggleButton).toBeVisible();
-  });
-
   test('creating a new note updates count', async ({ page }) => {
     // Wait for page to stabilize
     // Avoid networkidle due to persistent connections
     await page.waitForLoadState('domcontentloaded');
     await page.waitForTimeout(2000); // Wait for toasts to auto-dismiss
-    
+
     // Dismiss any remaining toasts
     await page.evaluate(() => {
       const toaster = document.querySelector('[data-rht-toaster]');
@@ -79,9 +60,12 @@ test.describe('Core Application Flow', () => {
       }
     });
     await page.waitForTimeout(1000);
-    
-    const countText = await page.locator('text=/\\d+ notes?/').textContent();
-    const initialCount = parseInt(countText?.match(/\d+/)?.[0] || '0');
+
+    // Get initial count by counting note items in sidebar (id="note-{uuid}")
+    const initialCount = await page.evaluate(() => {
+      const noteItems = document.querySelectorAll('[id^="note-"]');
+      return noteItems.length;
+    });
 
     // Ensure button is clickable by scrolling into view and waiting
     const newNoteButton = page.getByLabel(/Create new note/i);
@@ -91,8 +75,13 @@ test.describe('Core Application Flow', () => {
     // Use JavaScript click to bypass any overlay issues
     await newNoteButton.evaluate((el: HTMLElement) => el.click());
     await page.waitForTimeout(500);
-    
-    await expect(page.locator(`text=${initialCount + 1} note`)).toBeVisible({ timeout: 5000 });
+
+    // Verify note count increased by checking sidebar note items
+    const newCount = await page.evaluate(() => {
+      const noteItems = document.querySelectorAll('[id^="note-"]');
+      return noteItems.length;
+    });
+    expect(newCount).toBe(initialCount + 1);
   });
 
   test('code block insertion works and is editable', async ({ page }) => {

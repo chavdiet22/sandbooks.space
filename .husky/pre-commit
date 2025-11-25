@@ -1,2 +1,35 @@
+echo "→ Checking for leaked secrets…"
+
+# Get staged files (excluding .env.example files which may have placeholder patterns)
+STAGED_FILES=$(git diff --cached --name-only --diff-filter=ACM | grep -v '\.env\.example$' | grep -v '\.env$')
+
+if [ -n "$STAGED_FILES" ]; then
+    # Check for HOPX API key pattern: hopx_ followed by 20+ alphanumeric chars
+    # Using grep -E for extended regex
+    LEAKED_FILES=""
+    for file in $STAGED_FILES; do
+        if [ -f "$file" ] && grep -qE 'hopx_[a-zA-Z0-9]{20,}' "$file" 2>/dev/null; then
+            LEAKED_FILES="$LEAKED_FILES $file"
+        fi
+    done
+
+    if [ -n "$LEAKED_FILES" ]; then
+        echo ""
+        echo "❌ ERROR: HOPX API key detected in staged files:"
+        for f in $LEAKED_FILES; do
+            echo "   - $f"
+        done
+        echo ""
+        echo "Remove the API key before committing."
+        echo "API keys belong in .env files (gitignored)."
+        echo ""
+        echo "To find the exact location:"
+        echo "  grep -rn 'hopx_' $LEAKED_FILES"
+        exit 1
+    fi
+fi
+
+echo "✓ No secrets detected"
+echo ""
 echo "→ Running lint (frontend + backend)…"
 npm run lint

@@ -82,16 +82,18 @@ export const FontControls = ({ editor, onClose, anchorElement }: FontControlsPro
   return (
     <div
       ref={popoverRef}
-      className="fixed bg-white dark:bg-stone-800 border border-stone-200 dark:border-stone-700 rounded-lg shadow-elevation-3 p-4 min-w-[280px] max-w-[320px] z-50 animate-fadeInSlideUp"
+      className="fixed backdrop-blur-xl bg-white/90 dark:bg-stone-900/90 border border-stone-200/40 dark:border-stone-700/40 rounded-xl shadow-elevation-3 p-4 min-w-[280px] max-w-[320px] z-50 animate-fadeInSlideUp"
       role="dialog"
       aria-label="Font controls"
     >
-      <div className="text-sm font-semibold text-stone-900 dark:text-stone-50 mb-3">
+      {/* Inner glow overlay for glass depth */}
+      <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-white/40 via-transparent to-transparent dark:from-white/5 pointer-events-none" aria-hidden="true" />
+      <div className="relative text-sm font-semibold text-stone-900 dark:text-stone-50 mb-3">
         Font
       </div>
 
       {/* Font Family Section */}
-      <div className="mb-4">
+      <div className="relative mb-4">
         <label className="block text-xs font-semibold uppercase tracking-wider text-stone-500 dark:text-stone-400 mb-2">
           Family
         </label>
@@ -122,7 +124,7 @@ export const FontControls = ({ editor, onClose, anchorElement }: FontControlsPro
           {showFamily && (
             <div
               ref={familyRef}
-              className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-stone-800 border border-stone-200 dark:border-stone-700 rounded-lg shadow-elevation-3 p-1 z-50 max-h-[200px] overflow-y-auto"
+              className="absolute top-full left-0 right-0 mt-1 backdrop-blur-xl bg-white/95 dark:bg-stone-900/95 border border-stone-200/40 dark:border-stone-700/40 rounded-lg shadow-elevation-3 p-1 z-50 max-h-[200px] overflow-y-auto"
               role="listbox"
             >
               {FONT_FAMILIES.map((font) => (
@@ -148,7 +150,7 @@ export const FontControls = ({ editor, onClose, anchorElement }: FontControlsPro
       </div>
 
       {/* Font Size Section */}
-      <div>
+      <div className="relative">
         <label className="block text-xs font-semibold uppercase tracking-wider text-stone-500 dark:text-stone-400 mb-2">
           Size
         </label>
@@ -179,7 +181,7 @@ export const FontControls = ({ editor, onClose, anchorElement }: FontControlsPro
           {showSize && (
             <div
               ref={sizeRef}
-              className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-stone-800 border border-stone-200 dark:border-stone-700 rounded-lg shadow-elevation-3 p-1 z-50 max-h-[200px] overflow-y-auto"
+              className="absolute top-full left-0 right-0 mt-1 backdrop-blur-xl bg-white/95 dark:bg-stone-900/95 border border-stone-200/40 dark:border-stone-700/40 rounded-lg shadow-elevation-3 p-1 z-50 max-h-[200px] overflow-y-auto"
               role="listbox"
             >
               {FONT_SIZES.map((size) => (

@@ -90,16 +90,18 @@ export const ColorPicker = ({ editor, onClose, anchorElement, mode, onModeChange
   return (
     <div
       ref={popoverRef}
-      className="fixed bg-white dark:bg-stone-800 border border-stone-200 dark:border-stone-700 rounded-lg shadow-elevation-3 p-4 min-w-[280px] max-w-[320px] z-50 animate-fadeInSlideUp"
+      className="fixed backdrop-blur-xl bg-white/90 dark:bg-stone-900/90 border border-stone-200/40 dark:border-stone-700/40 rounded-xl shadow-elevation-3 p-4 min-w-[280px] max-w-[320px] z-50 animate-fadeInSlideUp"
       role="dialog"
       aria-label="Choose color"
     >
-      <div className="text-sm font-semibold text-stone-900 dark:text-stone-50 mb-3">
+      {/* Inner glow overlay for glass depth */}
+      <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-white/40 via-transparent to-transparent dark:from-white/5 pointer-events-none" aria-hidden="true" />
+      <div className="relative text-sm font-semibold text-stone-900 dark:text-stone-50 mb-3">
         {mode === 'text' ? 'Text Color' : 'Highlight Color'}
       </div>
 
       {/* Mode Toggle */}
-      <div className="flex items-center gap-2 p-2 rounded-lg bg-stone-50 dark:bg-stone-900/50 mb-3">
+      <div className="relative flex items-center gap-2 p-2 rounded-lg bg-stone-50/80 dark:bg-stone-900/50 mb-3">
         <button
           onClick={() => onModeChange('text')}
           className={`text-xs font-medium px-3 py-1.5 rounded-md transition-colors duration-200 ${
@@ -123,7 +125,7 @@ export const ColorPicker = ({ editor, onClose, anchorElement, mode, onModeChange
       </div>
 
       {/* Stone Palette */}
-      <div className="mb-3">
+      <div className="relative mb-3">
         <div className="grid grid-cols-8 gap-2">
           {STONE_COLORS.map((color) => (
             <button
@@ -143,7 +145,7 @@ export const ColorPicker = ({ editor, onClose, anchorElement, mode, onModeChange
       </div>
 
       {/* Accent Colors */}
-      <div className="mb-3">
+      <div className="relative mb-3">
         <div className="grid grid-cols-6 gap-2">
           {ACCENT_COLORS.map((color) => (
             <button
@@ -163,7 +165,7 @@ export const ColorPicker = ({ editor, onClose, anchorElement, mode, onModeChange
       </div>
 
       {/* Custom Color */}
-      <div className="mt-3">
+      <div className="relative mt-3">
         <label className="block text-xs text-stone-500 dark:text-stone-400 mb-2">
           Custom Color
         </label>
