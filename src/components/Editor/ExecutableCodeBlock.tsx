@@ -1,6 +1,6 @@
 import { NodeViewWrapper } from '@tiptap/react';
 import type { NodeViewProps } from '@tiptap/react';
-import { useState } from 'react';
+import React, { useState } from 'react';
 import type { Language, ExecutionResult } from '../../types';
 import { useNotesStore } from '../../store/notesStore';
 import { showToast as toast } from '../../utils/toast';
@@ -268,6 +268,7 @@ export const ExecutableCodeBlockComponent = ({ node, updateAttributes }: NodeVie
             theme={darkModeEnabled ? 'dark' : 'light'}
             readonly={isExecuting}
             className="min-h-[120px]"
+            autoFocus
           />
         </div>
 

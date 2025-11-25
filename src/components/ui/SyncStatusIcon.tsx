@@ -5,6 +5,8 @@ import { FaDownload, FaUpload } from 'react-icons/fa';
 import { FileSystemSync } from '../FileSystemSync';
 import { showToast as toast } from '../../utils/toast';
 import { parseIpynb, convertIpynbToNote } from '../../utils/ipynb';
+import { Popover } from './Popover';
+import { Button } from './Button';
 
 export const SyncStatusIcon = () => {
     const { syncStatus, lastSyncedAt, importNotes, exportNotes, notes, storageType, storageName, addNote } = useNotesStore();
@@ -136,21 +138,22 @@ export const SyncStatusIcon = () => {
     };
 
     return (
-        <div className="relative" ref={popoverRef}>
-            <button
-                onClick={() => setIsOpen(!isOpen)}
-                className={clsx(
-                    "p-1.5 md:p-2 lg:p-2.5 hover:bg-stone-100 dark:hover:bg-stone-800 rounded-lg transition-all duration-200 group focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-blue-600 focus-visible:ring-offset-3 active:scale-[0.98]",
-                    isOpen && "bg-stone-100 dark:bg-stone-800"
-                )}
-                title={`Sync status: ${getStatusText()}`}
-                aria-label="Sync status"
-            >
-                {getIcon()}
-            </button>
-
-            {isOpen && (
-                <div className="absolute right-0 top-full mt-2 w-64 bg-white dark:bg-stone-900 rounded-xl shadow-xl border border-stone-200 dark:border-stone-800 p-4 z-50 animate-in fade-in zoom-in-95 duration-200 origin-top-right">
+        <Popover
+            align="right"
+            trigger={
+                <Button
+                    variant="ghost"
+                    size="icon"
+                    className={clsx(isOpen && "bg-stone-100 dark:bg-stone-800")}
+                    aria-label={`Sync status: ${getStatusText()}`}
+                >
+                    {getIcon()}
+                </Button>
+            }
+            isOpen={isOpen}
+            onOpenChange={setIsOpen}
+            content={
+                <div className="w-72 p-4">
                     <div className="flex items-center justify-between mb-3">
                         <span className="text-sm font-medium text-stone-900 dark:text-stone-100">Sync Status</span>
                         <span className={clsx(
@@ -196,20 +199,22 @@ export const SyncStatusIcon = () => {
 
                     <div className="h-px bg-stone-200 dark:bg-stone-800 my-3" />
 
-                    <div className="space-y-2">
-                        <button
+                    <div className="space-y-1">
+                        <Button
+                            variant="ghost"
+                            size="sm"
                             onClick={() => { handleExport(); setIsOpen(false); }}
                             disabled={notes.length === 0}
-                            className="w-full flex items-center gap-3 px-4 py-3 text-left text-sm text-stone-700 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800/60 transition-all duration-200 rounded-lg group disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="w-full justify-start gap-3 px-2"
                         >
-                            <FaDownload className="w-4 h-4 shrink-0 text-stone-500 dark:text-stone-400 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors" />
-                            <span className="flex-1">Export Notes</span>
-                        </button>
+                            <FaDownload className="w-4 h-4 shrink-0 text-stone-500 dark:text-stone-400" />
+                            <span>Export Notes</span>
+                        </Button>
 
                         {/* Import from JSON */}
-                        <label className="w-full flex items-center gap-3 px-4 py-3 text-left text-sm text-stone-700 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800/60 transition-all duration-200 rounded-lg group cursor-pointer">
-                            <FaUpload className="w-4 h-4 shrink-0 text-stone-500 dark:text-stone-400 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors" />
-                            <span className="flex-1">Import from JSON</span>
+                        <label className="w-full flex items-center gap-3 px-2 py-2 text-left text-sm text-stone-600 dark:text-stone-400 hover:bg-stone-100 dark:hover:bg-stone-800 hover:text-stone-900 dark:hover:text-stone-200 transition-all duration-200 rounded-lg cursor-pointer">
+                            <FaUpload className="w-4 h-4 shrink-0" />
+                            <span className="flex-1 font-medium">Import from JSON</span>
                             <input
                                 ref={fileInputRef}
                                 type="file"
@@ -220,11 +225,11 @@ export const SyncStatusIcon = () => {
                         </label>
 
                         {/* Import Jupyter Notebook */}
-                        <label className="w-full flex items-center gap-3 px-4 py-3 text-left text-sm text-stone-700 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800/60 transition-all duration-200 rounded-lg group cursor-pointer">
-                            <svg className="w-4 h-4 shrink-0 text-stone-500 dark:text-stone-400 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <label className="w-full flex items-center gap-3 px-2 py-2 text-left text-sm text-stone-600 dark:text-stone-400 hover:bg-stone-100 dark:hover:bg-stone-800 hover:text-stone-900 dark:hover:text-stone-200 transition-all duration-200 rounded-lg cursor-pointer">
+                            <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                             </svg>
-                            <span className="flex-1">Import Jupyter Notebook</span>
+                            <span className="flex-1 font-medium">Import Jupyter Notebook</span>
                             <input
                                 ref={notebookInputRef}
                                 type="file"
@@ -237,7 +242,9 @@ export const SyncStatusIcon = () => {
                         <div className="h-px bg-stone-200 dark:bg-stone-800 my-2" />
 
                         {/* Markdown Actions */}
-                        <button
+                        <Button
+                            variant="ghost"
+                            size="sm"
                             onClick={() => {
                                 const activeNote = notes.find(n => n.id === useNotesStore.getState().activeNoteId);
                                 if (activeNote) {
@@ -260,19 +267,19 @@ export const SyncStatusIcon = () => {
                                 }
                             }}
                             disabled={!useNotesStore.getState().activeNoteId}
-                            className="w-full flex items-center gap-3 px-4 py-3 text-left text-sm text-stone-700 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800/60 transition-all duration-200 rounded-lg group disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="w-full justify-start gap-3 px-2"
                         >
-                            <svg className="w-4 h-4 shrink-0 text-stone-500 dark:text-stone-400 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg className="w-4 h-4 shrink-0 text-stone-500 dark:text-stone-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                             </svg>
-                            <span className="flex-1">Export Current (Markdown)</span>
-                        </button>
+                            <span>Export Current (Markdown)</span>
+                        </Button>
 
-                        <label className="w-full flex items-center gap-3 px-4 py-3 text-left text-sm text-stone-700 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800/60 transition-all duration-200 rounded-lg group cursor-pointer">
-                            <svg className="w-4 h-4 shrink-0 text-stone-500 dark:text-stone-400 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <label className="w-full flex items-center gap-3 px-2 py-2 text-left text-sm text-stone-600 dark:text-stone-400 hover:bg-stone-100 dark:hover:bg-stone-800 hover:text-stone-900 dark:hover:text-stone-200 transition-all duration-200 rounded-lg cursor-pointer">
+                            <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
                             </svg>
-                            <span className="flex-1">Import Markdown</span>
+                            <span className="flex-1 font-medium">Import Markdown</span>
                             <input
                                 type="file"
                                 accept=".md,.markdown,.txt"
@@ -296,7 +303,8 @@ export const SyncStatusIcon = () => {
                         </div>
                     </div>
                 </div>
-            )}
-        </div>
+            }
+        />
     );
 };
+

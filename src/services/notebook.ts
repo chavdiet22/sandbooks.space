@@ -1,6 +1,20 @@
 import type { ExecuteCellResponse } from '../types/notebook';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+const API_TOKEN = import.meta.env.VITE_API_TOKEN;
+
+/**
+ * Get standard headers including auth token if configured
+ */
+function getHeaders(): Record<string, string> {
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+  };
+  if (API_TOKEN) {
+    headers['Authorization'] = `Bearer ${API_TOKEN}`;
+  }
+  return headers;
+}
 
 /**
  * Execute a code cell in a notebook with stateful execution
@@ -8,9 +22,7 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 export async function executeCell(noteId: string, code: string): Promise<ExecuteCellResponse> {
   const response = await fetch(`${API_URL}/api/notebooks/${noteId}/execute`, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
+    headers: getHeaders(),
     body: JSON.stringify({ code }),
   });
 
@@ -28,9 +40,7 @@ export async function executeCell(noteId: string, code: string): Promise<Execute
 export async function restartKernel(noteId: string): Promise<void> {
   const response = await fetch(`${API_URL}/api/notebooks/${noteId}/restart`, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
+    headers: getHeaders(),
   });
 
   if (!response.ok) {
@@ -44,6 +54,7 @@ export async function restartKernel(noteId: string): Promise<void> {
 export async function destroySession(noteId: string): Promise<void> {
   const response = await fetch(`${API_URL}/api/notebooks/${noteId}/session`, {
     method: 'DELETE',
+    headers: getHeaders(),
   });
 
   if (!response.ok) {
@@ -62,7 +73,9 @@ export async function getSessionStatus(noteId: string): Promise<{
   createdAt: string;
   lastActivity: string;
 }> {
-  const response = await fetch(`${API_URL}/api/notebooks/${noteId}/session`);
+  const response = await fetch(`${API_URL}/api/notebooks/${noteId}/session`, {
+    headers: getHeaders(),
+  });
 
   if (!response.ok) {
     throw new Error('Failed to get session status');

@@ -1,5 +1,5 @@
 import { test } from '@playwright/test';
-import { seedCleanState } from './helpers';
+import { seedCleanState, insertCodeBlock } from './helpers';
 
 test.beforeEach(async ({ page }) => {
   await seedCleanState(page);
@@ -27,12 +27,9 @@ test('Run Button Pulse Glow and Code Results', async ({ page }) => {
     }
   });
   await page.waitForTimeout(300);
-  
-  // Click the Code button in toolbar
-  const codeBlockButton = page.getByLabel(/Insert code block/i).or(page.getByTitle(/Insert Code Block/i));
-  await codeBlockButton.waitFor({ state: 'visible', timeout: 5000 });
-  await codeBlockButton.scrollIntoViewIfNeeded();
-  await codeBlockButton.click({ force: true });
+
+  // Insert code block via slash command
+  await insertCodeBlock(page);
   await page.waitForTimeout(500);
 
   // Type Python code in the code block

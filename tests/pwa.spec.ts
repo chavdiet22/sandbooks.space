@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { seedCleanState } from './helpers';
+import { seedCleanState, insertCodeBlock } from './helpers';
 
 test.describe('PWA Features', () => {
   test.beforeEach(async ({ page }) => {
@@ -236,10 +236,8 @@ test.describe('PWA Features', () => {
     
     await page.waitForTimeout(500);
 
-    // Insert a code block
-    const codeBlockButton = page.getByTitle(/Insert Code Block/i).or(page.getByLabel(/Insert code block/i));
-    await codeBlockButton.waitFor({ state: 'visible', timeout: 5000 });
-    await codeBlockButton.click();
+    // Insert a code block via slash command
+    await insertCodeBlock(page);
     await page.waitForTimeout(500);
 
     // Find code editor and type code

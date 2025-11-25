@@ -36,6 +36,7 @@ interface CodeMirrorEditorProps {
   theme: 'light' | 'dark';
   readonly?: boolean;
   className?: string;
+  autoFocus?: boolean;
 }
 
 export const CodeMirrorEditor = ({
@@ -45,6 +46,7 @@ export const CodeMirrorEditor = ({
   theme,
   readonly = false,
   className = '',
+  autoFocus = false,
 }: CodeMirrorEditorProps) => {
   const editorRef = useRef<HTMLDivElement>(null);
   const viewRef = useRef<EditorView | null>(null);
@@ -157,6 +159,16 @@ export const CodeMirrorEditor = ({
 
     viewRef.current = view;
     isInitializedRef.current = true;
+
+    // Auto-focus the editor on mount if requested
+    // This is important for code blocks inserted via slash commands
+    // Without this, typing immediately after insertion would replace the code block
+    if (autoFocus) {
+      // Use requestAnimationFrame to ensure the DOM is ready
+      requestAnimationFrame(() => {
+        view.focus();
+      });
+    }
 
     // Cleanup on unmount
     return () => {

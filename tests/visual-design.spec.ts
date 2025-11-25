@@ -99,15 +99,17 @@ test.describe('Visual Design System Compliance', () => {
   });
 
   test('editor toolbar is visible and functional', async ({ page }) => {
-    // Check toolbar buttons
-    const boldButton = page.getByTitle(/Bold/i);
+    // Check toolbar buttons exist
+    const boldButton = page.getByLabel(/Bold/i);
     await expect(boldButton).toBeVisible();
 
-    const italicButton = page.getByTitle(/Italic/i);
+    const italicButton = page.getByLabel(/Italic/i);
     await expect(italicButton).toBeVisible();
 
-    const codeBlockButton = page.getByTitle(/Insert Code Block/i);
-    await expect(codeBlockButton).toBeVisible();
+    // Code blocks are now inserted via slash commands (/code)
+    // Verify Insert Link button exists as proxy for Insert group
+    const linkButton = page.getByLabel(/Insert Link/i);
+    await expect(linkButton).toBeVisible();
   });
 
   test('glass morphism effects are applied', async ({ page }) => {

@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { seedCleanState } from './helpers';
+import { seedCleanState, insertCodeBlock } from './helpers';
 
 test.describe('Core Application Flow', () => {
   test.beforeEach(async ({ page }) => {
@@ -21,7 +21,7 @@ test.describe('Core Application Flow', () => {
   test('loads and shows primary actions', async ({ page }) => {
     await expect(page).toHaveTitle('Sandbooks - Executable Notes for Developers');
     await expect(page.getByText('dev notes')).toBeVisible();
-    await expect(page.getByTitle(/new note/i)).toBeVisible();
+    await expect(page.getByLabel(/Create new note/i)).toBeVisible();
     // Verify header has action buttons (dark mode, terminal, new note)
     const header = page.locator('header');
     const hasActions = await header.locator('button').count() > 0;
@@ -80,12 +80,12 @@ test.describe('Core Application Flow', () => {
     
     const countText = await page.locator('text=/\\d+ notes?/').textContent();
     const initialCount = parseInt(countText?.match(/\d+/)?.[0] || '0');
-    
+
     // Ensure button is clickable by scrolling into view and waiting
-    const newNoteButton = page.getByTitle(/new note/i);
+    const newNoteButton = page.getByLabel(/Create new note/i);
     await newNoteButton.scrollIntoViewIfNeeded();
     await newNoteButton.waitFor({ state: 'visible', timeout: 5000 });
-    
+
     // Use JavaScript click to bypass any overlay issues
     await newNoteButton.evaluate((el: HTMLElement) => el.click());
     await page.waitForTimeout(500);
@@ -104,13 +104,10 @@ test.describe('Core Application Flow', () => {
       }
     });
     await page.waitForTimeout(300);
-    
-    // Try multiple selectors for code block button
-    const codeBlockButton = page.getByLabel(/Insert code block/i).or(page.getByTitle(/Insert Code Block/i));
-    await codeBlockButton.waitFor({ state: 'visible', timeout: 5000 });
-    await codeBlockButton.scrollIntoViewIfNeeded();
-    await codeBlockButton.click({ force: true });
-    
+
+    // Insert code block via slash command
+    await insertCodeBlock(page);
+
     await expect(page.locator('select').first()).toBeVisible({ timeout: 5000 });
     const editor = page.locator('.cm-content').first();
     await editor.click();
@@ -129,19 +126,17 @@ test.describe('Core Application Flow', () => {
       }
     });
     await page.waitForTimeout(300);
-    
-    const codeBlockButton = page.getByLabel(/Insert code block/i).or(page.getByTitle(/Insert Code Block/i));
-    await codeBlockButton.waitFor({ state: 'visible', timeout: 5000 });
-    await codeBlockButton.scrollIntoViewIfNeeded();
-    await codeBlockButton.click({ force: true });
-    
+
+    // Insert code block via slash command
+    await insertCodeBlock(page);
+
     await expect(page.locator('select').first()).toBeVisible({ timeout: 5000 });
     await page.waitForTimeout(500); // Wait for select to populate
-    
+
     const options = await page.locator('select').first().locator('option').allTextContents();
     const normalizedOptions = options.map(opt => opt.trim().toLowerCase()).filter(opt => opt.length > 0);
     const expected = ['bash', 'go', 'javascript', 'python', 'typescript'].map(lang => lang.toLowerCase());
-    
+
     // Check that all expected languages are present
     const hasAllLanguages = expected.every(lang => normalizedOptions.includes(lang));
     expect(hasAllLanguages).toBe(true);
