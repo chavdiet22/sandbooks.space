@@ -11,6 +11,13 @@ test.describe('Folder System', () => {
     await page.waitForSelector('header h1', { timeout: 10000 });
     // Wait for the folder tree to render
     await page.waitForSelector('[role="tree"]', { timeout: 10000 });
+    // Wait for React hydration to complete (button must be interactive)
+    await page.waitForFunction(() => {
+      const btn = document.querySelector('button[aria-label="Create folder"]');
+      return btn && !btn.hasAttribute('disabled');
+    }, { timeout: 5000 });
+    // Small buffer for event handlers to attach
+    await page.waitForTimeout(100);
   });
 
   test.describe('Folder Tree UI', () => {
@@ -67,9 +74,10 @@ test.describe('Folder System', () => {
       const createFolderButton = page.locator('button[aria-label="Create folder"]').first();
       await createFolderButton.click();
 
-      // Find and fill the input
+      // Find and fill the input - wait for it to be editable
       const folderInput = page.locator('input[aria-label="Folder name"]');
-      await expect(folderInput).toBeVisible();
+      await expect(folderInput).toBeVisible({ timeout: 3000 });
+      await expect(folderInput).toBeEditable({ timeout: 1000 });
       await folderInput.fill('Test Folder E2E');
 
       // Press Enter to submit
@@ -85,7 +93,8 @@ test.describe('Folder System', () => {
       await createFolderButton.click();
 
       const folderInput = page.locator('input[aria-label="Folder name"]');
-      await expect(folderInput).toBeVisible();
+      await expect(folderInput).toBeVisible({ timeout: 3000 });
+      await expect(folderInput).toBeEditable({ timeout: 1000 });
       await folderInput.fill('Should Not Exist');
 
       // Press Escape to cancel
@@ -107,6 +116,8 @@ test.describe('Folder System', () => {
       await createFolderButton.click();
 
       const folderInput = page.locator('input[aria-label="Folder name"]');
+      await expect(folderInput).toBeVisible({ timeout: 3000 });
+      await expect(folderInput).toBeEditable({ timeout: 1000 });
       await folderInput.fill('Context Menu Test');
       await page.keyboard.press('Enter');
 
@@ -132,6 +143,8 @@ test.describe('Folder System', () => {
       await createFolderButton.click();
 
       const folderInput = page.locator('input[aria-label="Folder name"]');
+      await expect(folderInput).toBeVisible({ timeout: 3000 });
+      await expect(folderInput).toBeEditable({ timeout: 1000 });
       await folderInput.fill('Rename Test');
       await page.keyboard.press('Enter');
 
@@ -147,7 +160,8 @@ test.describe('Folder System', () => {
 
       // Enter new name in the rename input
       const renameInput = page.locator('input[aria-label="Folder name"]');
-      await expect(renameInput).toBeVisible();
+      await expect(renameInput).toBeVisible({ timeout: 3000 });
+      await expect(renameInput).toBeEditable({ timeout: 1000 });
       await renameInput.fill('Renamed Folder');
       await page.keyboard.press('Enter');
 
@@ -162,6 +176,8 @@ test.describe('Folder System', () => {
       await createFolderButton.click();
 
       const folderInput = page.locator('input[aria-label="Folder name"]');
+      await expect(folderInput).toBeVisible({ timeout: 3000 });
+      await expect(folderInput).toBeEditable({ timeout: 1000 });
       await folderInput.fill('Delete Test Folder');
       await page.keyboard.press('Enter');
 
@@ -194,6 +210,8 @@ test.describe('Folder System', () => {
       await createFolderButton.click();
 
       const folderInput = page.locator('input[aria-label="Folder name"]');
+      await expect(folderInput).toBeVisible({ timeout: 3000 });
+      await expect(folderInput).toBeEditable({ timeout: 1000 });
       await folderInput.fill('Parent Folder');
       await page.keyboard.press('Enter');
 
@@ -209,7 +227,8 @@ test.describe('Folder System', () => {
 
       // Enter subfolder name
       const subfolderInput = page.locator('input[aria-label="Folder name"]');
-      await expect(subfolderInput).toBeVisible();
+      await expect(subfolderInput).toBeVisible({ timeout: 3000 });
+      await expect(subfolderInput).toBeEditable({ timeout: 1000 });
       await subfolderInput.fill('Child Folder');
       await page.keyboard.press('Enter');
 
@@ -242,6 +261,8 @@ test.describe('Folder System', () => {
       await createFolderButton.click();
 
       const folderInput = page.locator('input[aria-label="Folder name"]');
+      await expect(folderInput).toBeVisible({ timeout: 3000 });
+      await expect(folderInput).toBeEditable({ timeout: 1000 });
       await folderInput.fill('Selection Test');
       await page.keyboard.press('Enter');
 

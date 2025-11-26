@@ -1,6 +1,5 @@
 import { WebSocket } from 'ws';
 
-// SDK 0.3.4 - ExpiryInfo interface
 export interface ExpiryInfo {
   expiresAt: Date | null;
   timeToExpiry: number | null;
@@ -41,11 +40,10 @@ export interface HopxSandboxInfo {
   [key: string]: unknown;
 }
 
-// SDK 0.3.4 - Code execution options with preflight
 export interface CodeExecutionOptions {
   language: string;
   timeout?: number;
-  /** SDK 0.3.4: Run health check before execution */
+  /** Run health check before execution */
   preflight?: boolean;
 }
 
@@ -58,13 +56,16 @@ export interface HopxSandbox {
   getInfo: () => Promise<HopxSandboxInfo>;
   kill: () => Promise<void>;
 
-  // SDK 0.3.4 - Health check methods
   /** Check if sandbox is healthy and ready */
   isHealthy: () => Promise<boolean>;
   /** Throw if sandbox is not healthy or expired */
   ensureHealthy: () => Promise<void>;
 
-  // SDK 0.3.4 - Expiry management methods
+  /** Ensure token is valid, refresh if < 1 hour remaining. Preserves sandbox state */
+  ensureValidToken: () => Promise<void>;
+  /** Refresh the sandbox JWT token. Preserves sandbox state */
+  refreshToken: () => Promise<void>;
+
   /** Get seconds until sandbox expires (negative if expired), null if no timeout */
   getTimeToExpiry: () => Promise<number | null>;
   /** Check if expiring within threshold (default: 300s) */

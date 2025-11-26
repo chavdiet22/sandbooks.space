@@ -7,18 +7,19 @@ const API_TOKEN = import.meta.env.VITE_API_TOKEN;
 
 // Default timeouts per language (in seconds) - matches backend
 const DEFAULT_TIMEOUTS: Record<Language, number> = {
-  python: 120,      // 2 min - allows for pip install
+  python: 900,      // 15 min - allows for pip install of large packages
   javascript: 60,   // 1 min
   typescript: 60,   // 1 min
-  bash: 120,        // 2 min - shell scripts can be slow
+  bash: 900,        // 15 min - shell scripts including package installs
   go: 60,           // 1 min
 };
 
-// Maximum timeout (5 minutes) - prevents abuse
-const MAX_TIMEOUT_SECONDS = 300;
+// Maximum timeout (15 minutes) - supports pip install
+const MAX_TIMEOUT_SECONDS = 900;
 
 // Network buffer added to execution timeout for HTTP request
-const NETWORK_BUFFER_MS = 30000; // 30 seconds buffer
+// SDK 0.3.5+ adds its own 30s buffer, so we use a smaller buffer here
+const NETWORK_BUFFER_MS = 30000; // 30 seconds buffer (SDK adds additional 30s)
 
 if (!API_BASE_URL) {
   throw new Error('VITE_API_URL environment variable is required. Please create a .env file with VITE_API_URL=http://localhost:3001');

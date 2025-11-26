@@ -262,8 +262,12 @@ export const ExecutableCodeBlockComponent = ({ node, updateAttributes }: NodeVie
         {/* Inner glow overlay for glass depth */}
         <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-white/30 via-transparent to-transparent dark:from-white/5 pointer-events-none" aria-hidden="true" />
 
-        {/* Code Block Header */}
-        <div className="relative flex items-center justify-between px-4 py-2.5 bg-stone-50/80 dark:bg-stone-800/80 border-b border-stone-200/50 dark:border-stone-700/50">
+        {/* Code Block Header - prevent touch events from bubbling to ProseMirror (which causes selection on mobile) */}
+        <div
+          className="relative flex items-center justify-between px-4 py-2.5 bg-stone-50/80 dark:bg-stone-800/80 border-b border-stone-200/50 dark:border-stone-700/50 select-none touch-manipulation"
+          onMouseDown={(e) => e.stopPropagation()}
+          onTouchStart={(e) => e.stopPropagation()}
+        >
           {/* Language Selector */}
           <div className="relative">
             <div className="flex items-center gap-2">
@@ -380,7 +384,11 @@ export const ExecutableCodeBlockComponent = ({ node, updateAttributes }: NodeVie
 
         {/* Live Running Indicator */}
         {isExecuting && (
-          <div className="relative border-t border-stone-200/50 dark:border-stone-700/50 animate-fadeInSlideUp">
+          <div
+            className="relative border-t border-stone-200/50 dark:border-stone-700/50 animate-fadeInSlideUp select-none"
+            onMouseDown={(e) => e.stopPropagation()}
+            onTouchStart={(e) => e.stopPropagation()}
+          >
             <div className="px-5 py-4 bg-blue-50/80 dark:bg-blue-900/20 backdrop-blur-sm">
               <div className="flex items-center gap-3">
                 {/* Animated dots */}

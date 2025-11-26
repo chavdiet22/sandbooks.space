@@ -85,7 +85,7 @@ Single global store (`src/store/notesStore.ts`):
 
 ### Terminal Architecture
 
-- Quake-style overlay (toggle: `Cmd+\``)
+- Quake-style overlay (toggle: `Cmd/Ctrl+\``)
 - GLOBAL session (single session per app)
 - Initialized on mount (`initializeGlobalTerminalSession()`)
 - Backend: Isolated sandbox per session

@@ -20,9 +20,10 @@ import { executionModeManager } from '../../services/execution/executionModeMana
 import { useNotesStore } from '../../store/notesStore';
 import type { TerminalEmulatorProps, TerminalTheme } from '../../types/terminal';
 
-// Simple console logger
+// Conditional logger - silent in production and tests
+const isDebug = import.meta.env.DEV && typeof import.meta.env.VITEST === 'undefined';
 const logger = {
-  debug: (...args: unknown[]) => console.log('[TerminalEmulator]', ...args),
+  debug: isDebug ? (...args: unknown[]) => console.log('[TerminalEmulator]', ...args) : () => {},
   error: (...args: unknown[]) => console.error('[TerminalEmulator]', ...args),
 };
 
@@ -363,7 +364,7 @@ export function TerminalEmulator({
     let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
 
     const connect = () => {
-      console.log('[TerminalEmulator] connect() called', { sessionId, provider: provider?.name, mode: provider?.mode });
+      logger.debug('connect() called', { sessionId, provider: provider?.name, mode: provider?.mode });
       // Cleanup previous
       if (stream) {
         if (stream instanceof WebSocket) {
@@ -376,13 +377,13 @@ export function TerminalEmulator({
         provider.disconnectStream(stream);
       }
 
-      console.log('[TerminalEmulator] Calling provider.connectStream...');
+      logger.debug('Calling provider.connectStream...');
       stream = provider.connectStream(sessionId);
       streamRef.current = stream;
-      console.log('[TerminalEmulator] connectStream returned:', stream ? stream.constructor.name : 'null');
+      logger.debug('connectStream returned:', stream ? stream.constructor.name : 'null');
 
       if (!stream) {
-        console.error('[TerminalEmulator] No stream returned from provider');
+        logger.error('No stream returned from provider');
         onErrorRef.current('Failed to connect to terminal stream');
         return;
       }
@@ -485,11 +486,11 @@ export function TerminalEmulator({
       }
     };
 
-    console.log('[TerminalEmulator] useEffect about to call connect()', { sessionId });
+    logger.debug('useEffect about to call connect()', { sessionId });
     connect();
 
     return () => {
-      console.log('[TerminalEmulator] useEffect cleanup', { sessionId });
+      logger.debug('useEffect cleanup', { sessionId });
       if (reconnectTimer) clearTimeout(reconnectTimer);
       if (stream) {
         if (stream instanceof WebSocket) {

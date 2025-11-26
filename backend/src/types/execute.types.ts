@@ -7,15 +7,15 @@ export type SupportedLanguage = z.infer<typeof SupportedLanguage>;
 // Default timeouts per language (in seconds)
 // These are sensible defaults that users can override
 export const DEFAULT_TIMEOUTS: Record<SupportedLanguage, number> = {
-  python: 120,      // 2 min - allows for pip install
+  python: 900,      // 15 min - allows for pip install of large packages
   javascript: 60,   // 1 min
   typescript: 60,   // 1 min
-  bash: 120,        // 2 min - shell scripts can be slow
+  bash: 900,        // 15 min - shell scripts including package installs
   go: 60,           // 1 min
 };
 
-// Maximum allowed timeout (5 minutes) - prevents abuse
-export const MAX_TIMEOUT_SECONDS = 300;
+// Maximum allowed timeout (15 minutes) - supports pip install
+export const MAX_TIMEOUT_SECONDS = 900;
 
 // Request schema with validation
 export const ExecuteRequestSchema = z.object({

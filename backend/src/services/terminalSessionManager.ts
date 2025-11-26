@@ -20,8 +20,8 @@ import { getErrorMessage } from '../utils/errorUtils';
  * Configuration constants - optimized for minimal resource usage
  */
 const CONFIG = {
-  SESSION_TIMEOUT_MS: 10 * 60 * 1000, // 10 minutes (reduced from 30)
-  CLEANUP_INTERVAL_MS: 2 * 60 * 1000, // 2 minutes (reduced from 5 for faster cleanup)
+  SESSION_TIMEOUT_MS: 15 * 60 * 1000, // 15 minutes (matches max execution timeout)
+  CLEANUP_INTERVAL_MS: 2 * 60 * 1000, // 2 minutes
   HEARTBEAT_INTERVAL_MS: 30 * 1000,   // 30 seconds
   MAX_COMMAND_HISTORY: 100,            // Keep last 100 commands
   MAX_SESSIONS: 50                     // Hard limit on concurrent sessions

@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useCallback, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { AnimatePresence, m } from 'framer-motion';
 import clsx from 'clsx';
+import { VscEllipsis } from 'react-icons/vsc';
 import { contextMenuVariants, staggerContainerVariants, staggerItemVariants } from '../../utils/animationVariants';
 
 export interface ContextMenuItem {
@@ -18,6 +19,10 @@ export interface ContextMenuProps {
   items: ContextMenuItem[];
   children: React.ReactNode;
   className?: string;
+  /** Render a clickable trigger button (three dots) for mobile users */
+  showTrigger?: boolean;
+  /** Custom class for the trigger button */
+  triggerClassName?: string;
 }
 
 interface MenuPosition {
@@ -43,13 +48,14 @@ interface MenuPosition {
 // Long-press duration for mobile touch (ms)
 const LONG_PRESS_DURATION = 500;
 
-export const ContextMenu: React.FC<ContextMenuProps> = ({ items, children, className }) => {
+export const ContextMenu: React.FC<ContextMenuProps> = ({ items, children, className, showTrigger, triggerClassName }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [position, setPosition] = useState<MenuPosition>({ x: 0, y: 0 });
   const [focusedIndex, setFocusedIndex] = useState(-1);
   const focusedIndexRef = useRef(focusedIndex);
   const menuRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
   const itemRefs = useRef<(HTMLButtonElement | null)[]>([]);
 
   // Touch handling refs
@@ -86,6 +92,17 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({ items, children, class
     e.preventDefault();
     e.stopPropagation();
     openMenuAt(e.clientX, e.clientY);
+  }, [openMenuAt]);
+
+  // Handle trigger button click (for mobile)
+  const handleTriggerClick = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (triggerRef.current) {
+      const rect = triggerRef.current.getBoundingClientRect();
+      // Position menu below and to the left of the trigger
+      openMenuAt(rect.right - 160, rect.bottom + 4);
+    }
   }, [openMenuAt]);
 
   // Touch handlers for mobile long-press support
@@ -262,9 +279,33 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({ items, children, class
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
         onTouchCancel={handleTouchEnd}
-        className={className}
+        className={clsx(className, showTrigger && 'relative group')}
       >
         {children}
+        {/* Clickable trigger button for mobile - positioned absolute in parent */}
+        {showTrigger && (
+          <button
+            ref={triggerRef}
+            type="button"
+            onClick={handleTriggerClick}
+            onTouchStart={(e) => e.stopPropagation()}
+            className={clsx(
+              'absolute right-1 top-1/2 -translate-y-1/2 p-1.5 rounded-lg',
+              'text-stone-400 dark:text-stone-500',
+              'hover:bg-stone-200 dark:hover:bg-stone-700',
+              'hover:text-stone-600 dark:hover:text-stone-300',
+              'opacity-0 group-hover:opacity-100 focus:opacity-100',
+              'transition-all duration-150',
+              'touch-manipulation select-none',
+              triggerClassName
+            )}
+            aria-label="Open menu"
+            aria-haspopup="menu"
+            aria-expanded={isOpen}
+          >
+            <VscEllipsis size={16} />
+          </button>
+        )}
       </div>
 
       {createPortal(

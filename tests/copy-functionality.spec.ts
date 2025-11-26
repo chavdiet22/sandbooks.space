@@ -72,7 +72,7 @@ test.describe('Copy Functionality', () => {
   test.describe('Note Context Menu', () => {
     test('right-click on note shows context menu', async ({ page }) => {
       // Wait for sidebar to be visible and have at least one note
-      const sidebarNote = page.locator('aside button[class*="rounded-lg"]').first();
+      const sidebarNote = page.locator('[role="treeitem"][data-note-id]').first();
       await expect(sidebarNote).toBeVisible({ timeout: 10000 });
 
       // Right-click on the note in sidebar
@@ -88,7 +88,7 @@ test.describe('Copy Functionality', () => {
 
     test('context menu copy as markdown option works', async ({ page }) => {
       // Wait for sidebar note
-      const sidebarNote = page.locator('aside button[class*="rounded-lg"]').first();
+      const sidebarNote = page.locator('[role="treeitem"][data-note-id]').first();
       await expect(sidebarNote).toBeVisible({ timeout: 10000 });
 
       // Right-click on the note
@@ -104,7 +104,7 @@ test.describe('Copy Functionality', () => {
 
     test('context menu has delete option', async ({ page }) => {
       // Wait for sidebar note
-      const sidebarNote = page.locator('aside button[class*="rounded-lg"]').first();
+      const sidebarNote = page.locator('[role="treeitem"][data-note-id]').first();
       await expect(sidebarNote).toBeVisible({ timeout: 10000 });
 
       // Right-click on note
@@ -120,7 +120,7 @@ test.describe('Copy Functionality', () => {
 
     test('context menu closes on Escape', async ({ page }) => {
       // Wait for sidebar note
-      const sidebarNote = page.locator('aside button[class*="rounded-lg"]').first();
+      const sidebarNote = page.locator('[role="treeitem"][data-note-id]').first();
       await expect(sidebarNote).toBeVisible({ timeout: 10000 });
 
       // Right-click on note
@@ -144,7 +144,7 @@ test.describe('Copy Functionality', () => {
 
     test('context menu closes on click outside', async ({ page }) => {
       // Wait for sidebar note
-      const sidebarNote = page.locator('aside button[class*="rounded-lg"]').first();
+      const sidebarNote = page.locator('[role="treeitem"][data-note-id]').first();
       await expect(sidebarNote).toBeVisible({ timeout: 10000 });
 
       // Right-click on note

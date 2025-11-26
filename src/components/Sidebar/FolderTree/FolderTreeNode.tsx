@@ -7,7 +7,6 @@ import {
   VscEdit,
   VscTrash,
   VscNewFolder,
-  VscEllipsis,
 } from 'react-icons/vsc';
 import type { Folder } from '../../../types/folder.types';
 import { getTagColorClasses } from '../../../utils/tagColors';
@@ -194,11 +193,6 @@ export const FolderTreeNode: React.FC<FolderTreeNodeProps> = ({
         {folder.name}
       </span>
 
-      {/* Context menu hint */}
-      <div className="absolute right-8 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-30 transition-opacity duration-150 pointer-events-none">
-        <VscEllipsis size={14} className="text-stone-500 dark:text-stone-400" />
-      </div>
-
       {/* Note count badge */}
       {noteCount > 0 && (
         <span
@@ -219,7 +213,7 @@ export const FolderTreeNode: React.FC<FolderTreeNodeProps> = ({
 
   // Wrap with context menu if there are items
   if (contextMenuItems.length > 0) {
-    return <ContextMenu items={contextMenuItems}>{content}</ContextMenu>;
+    return <ContextMenu items={contextMenuItems} showTrigger>{content}</ContextMenu>;
   }
 
   return content;

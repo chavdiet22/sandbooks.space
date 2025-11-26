@@ -152,6 +152,7 @@ class TerminalService {
     try {
       eventSource.close();
     } catch (error) {
+      // Log but don't throw - cleanup errors shouldn't crash the app
       console.error('[TerminalService] Error closing EventSource:', error);
     }
   }

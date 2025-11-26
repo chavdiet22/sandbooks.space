@@ -273,8 +273,19 @@ describe('TerminalService', () => {
       const module = await import('../terminal');
       terminalService = module.terminalService;
 
+      // Mock console.error to verify it's called and prevent stderr output
+      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
       // Should not throw
       expect(() => terminalService.disconnectStream(mockEventSource)).not.toThrow();
+
+      // Should log the error
+      expect(consoleErrorSpy).toHaveBeenCalledWith(
+        '[TerminalService] Error closing EventSource:',
+        expect.any(Error)
+      );
+
+      consoleErrorSpy.mockRestore();
     });
   });
 

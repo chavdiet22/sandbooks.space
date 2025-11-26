@@ -6,9 +6,8 @@ import { SupportedLanguage, ExecuteResponse, RichOutput, DEFAULT_TIMEOUTS } from
 import type { HopxSandbox, HopxMetrics, ExpiryInfo } from '../types/hopx.types';
 import { getErrorCode, getErrorMessage } from '../utils/errorUtils';
 
-// Configuration - simplified with SDK 0.3.4
 const CONFIG = {
-  SANDBOX_TIMEOUT_SECONDS: 600,   // 10 minutes TTL
+  SANDBOX_TIMEOUT_SECONDS: 1000,  // ~17 minutes TTL (> max execution timeout)
   EXPIRY_WARNING_THRESHOLD: 60,   // Warn 1 minute before expiry
   EXPIRY_CHECK_INTERVAL: 30,      // Check every 30 seconds
   RETRY_DELAYS_MS: [1000, 2000],  // 1s, 2s between retries
@@ -40,7 +39,7 @@ class HopxService {
 
   constructor() {
     this.apiKey = env.HOPX_API_KEY;
-    logger.info('Hopx Service initialized (lazy mode - SDK 0.3.4)');
+    logger.info('Hopx Service initialized (lazy mode)');
   }
 
   /**
@@ -105,7 +104,6 @@ class HopxService {
 
   /**
    * Handle sandbox expiry warning - proactively recreate
-   * SDK 0.3.4: Called by onExpiringSoon callback
    */
   private handleExpiringSoon = (info: ExpiryInfo): void => {
     logger.warn('Sandbox expiring soon - scheduling proactive refresh', {
@@ -123,11 +121,11 @@ class HopxService {
   };
 
   /**
-   * Create a sandbox instance with SDK 0.3.4 features
+   * Create a sandbox instance
    */
   private async createSandboxInstance(): Promise<{ sandbox: HopxSandbox; sandboxId: string }> {
     try {
-      logger.info('Creating Hopx sandbox (SDK 0.3.4)...', {
+      logger.info('Creating Hopx sandbox...', {
         timeout: `${CONFIG.SANDBOX_TIMEOUT_SECONDS}s`
       });
 
@@ -135,14 +133,12 @@ class HopxService {
         template: 'code-interpreter',
         apiKey: this.apiKey,
         timeoutSeconds: CONFIG.SANDBOX_TIMEOUT_SECONDS,
-        // SDK 0.3.4: Expiry warning callback
         onExpiringSoon: this.handleExpiringSoon,
         expiryWarningThreshold: CONFIG.EXPIRY_WARNING_THRESHOLD
       }) as unknown as HopxSandbox;
 
       const sandboxId = sandbox.sandboxId;
 
-      // SDK 0.3.4: Start background expiry monitoring
       sandbox.startExpiryMonitor(
         this.handleExpiringSoon,
         CONFIG.EXPIRY_WARNING_THRESHOLD,
@@ -166,7 +162,6 @@ class HopxService {
    * Reset cached sandbox state so the next call forces recreation
    */
   private resetSandboxState(): void {
-    // SDK 0.3.4: Stop expiry monitoring before clearing
     if (this.sandbox) {
       try {
         this.sandbox.stopExpiryMonitor();
@@ -180,7 +175,6 @@ class HopxService {
 
   /**
    * Get a healthy sandbox, creating or recreating as needed
-   * SDK 0.3.4: Uses native isHealthy() and isExpiringSoon()
    */
   private async getHealthySandbox(): Promise<HopxSandbox> {
     // Check circuit breaker before attempting any operations
@@ -193,7 +187,7 @@ class HopxService {
         return this.createSandbox();
       }
 
-      // Step 2: SDK 0.3.4 - Use native isExpiringSoon() check
+      // Check if sandbox is expiring soon
       const isExpiring = await this.sandbox.isExpiringSoon(CONFIG.EXPIRY_WARNING_THRESHOLD);
       if (isExpiring) {
         const expiryInfo = await this.sandbox.getExpiryInfo();
@@ -204,7 +198,7 @@ class HopxService {
         return this.recreateSandbox();
       }
 
-      // Step 3: SDK 0.3.4 - Use native isHealthy() check
+      // Verify sandbox health
       const isHealthy = await this.sandbox.isHealthy();
       if (!isHealthy) {
         logger.warn('Sandbox health check failed, recreating');
@@ -215,7 +209,6 @@ class HopxService {
       return this.sandbox;
 
     } catch (error: unknown) {
-      // SDK 0.3.4: Handle specific error types
       if (error instanceof SandboxExpiredError) {
         logger.warn('Sandbox expired (SDK detected), creating new one', {
           sandboxId: (error as SandboxExpiredError).sandboxId,
@@ -269,7 +262,6 @@ class HopxService {
     // Destroy old sandbox
     if (this.sandbox) {
       try {
-        // SDK 0.3.4: Stop monitoring before killing
         this.sandbox.stopExpiryMonitor();
         logger.info('Destroying old sandbox', { sandboxId: oldSandboxId });
         await this.sandbox.kill();
@@ -290,10 +282,8 @@ class HopxService {
 
   /**
    * Classify error for recovery strategy
-   * SDK 0.3.4: Use native error types for better detection
    */
   private classifyError(error: unknown): ClassifiedError {
-    // SDK 0.3.4: Check for specific SDK error types first
     if (error instanceof SandboxExpiredError) {
       return {
         code: 'SANDBOX_EXPIRED',
@@ -352,7 +342,6 @@ class HopxService {
 
   /**
    * Execute code with automatic recovery
-   * SDK 0.3.4: Uses preflight option for health checks
    */
   private async executeWithRecovery(
     code: string,
@@ -364,8 +353,19 @@ class HopxService {
 
     try {
       const sandbox = await this.getHealthySandbox();
+
+      // Proactive token refresh - preserves sandbox state (packages, files, env vars)
+      try {
+        await sandbox.ensureValidToken();
+      } catch (tokenError) {
+        logger.warn('Token refresh check failed (non-fatal)', {
+          error: getErrorMessage(tokenError),
+          sandboxId: this.sandboxId
+        });
+      }
+
       const runtimeLanguage = language === 'typescript' ? 'javascript' : language;
-      const executionTimeout = options.timeout ?? DEFAULT_TIMEOUTS[language] ?? 120; // SDK 0.3.4 default is 120s
+      const executionTimeout = options.timeout ?? DEFAULT_TIMEOUTS[language] ?? 900;
 
       logger.debug('Executing code', {
         language,
@@ -374,18 +374,18 @@ class HopxService {
         sandboxId: this.sandboxId
       });
 
-      // SDK 0.3.4: Use preflight option for automatic health check before execution
       const result = await sandbox.runCode(code, {
         language: runtimeLanguage,
         timeout: executionTimeout,
-        preflight: true // SDK 0.3.4: Ensures sandbox is healthy before execution
+        preflight: true // Ensures sandbox is healthy before execution
       }).catch((err: unknown) => {
         logger.error('Hopx runCode failed', {
           sandboxId: this.sandboxId,
           attempt: attempt + 1,
           error: getErrorMessage(err),
           code: getErrorCode(err),
-          errorType: err?.constructor?.name
+          errorType: err?.constructor?.name,
+          configuredTimeout: `${executionTimeout}s`
         });
         throw err;
       });
@@ -419,7 +419,7 @@ class HopxService {
         sandboxId: this.sandboxId
       });
 
-      // SDK 0.3.4: Use error type for smart recovery
+      // Use error type for smart recovery
       // Expired/token errors and unknown errors - reset state and auto-retry once
       const shouldResetAndRetry = ['corruption', 'expired', 'token', 'unknown'].includes(classified.category);
 
@@ -459,7 +459,7 @@ class HopxService {
    * Public API: Execute code with automatic recovery and retry
    * @param code - Code to execute
    * @param language - Programming language
-   * @param options.timeout - Optional execution timeout in seconds (SDK 0.3.4 default: 120s)
+   * @param options.timeout - Optional execution timeout in seconds (default: 900s for Python/Bash)
    */
   async executeCode(
     code: string,
@@ -467,7 +467,7 @@ class HopxService {
     options: { timeout?: number } = {}
   ): Promise<ExecuteResponse> {
     const startTime = Date.now();
-    const effectiveTimeout = options.timeout ?? DEFAULT_TIMEOUTS[language] ?? 120;
+    const effectiveTimeout = options.timeout ?? DEFAULT_TIMEOUTS[language] ?? 900;
     logger.info('Executing code', {
       language,
       codeLength: code.length,
@@ -565,7 +565,6 @@ class HopxService {
 
   /**
    * Public API: Get current sandbox health
-   * SDK 0.3.4: Uses native health and expiry methods
    */
   async getHealth(): Promise<{
     status: string;
@@ -608,7 +607,6 @@ class HopxService {
     }
 
     try {
-      // SDK 0.3.4: Use native health check
       const isHealthy = await this.sandbox.isHealthy();
       const health = await this.sandbox.getHealth();
       const expiryInfo = await this.sandbox.getExpiryInfo();

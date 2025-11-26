@@ -14,7 +14,6 @@ const baseEnv = {
   LOG_LEVEL: 'info'
 };
 
-// SDK 0.3.4 - Default expiry info for healthy sandbox
 const defaultExpiryInfo: ExpiryInfo = {
   expiresAt: new Date(Date.now() + 600000), // 10 min from now
   timeToExpiry: 600,
@@ -48,10 +47,10 @@ const createSandboxStub = (overrides: Partial<HopxSandbox> = {}): HopxSandbox =>
     expiresAt: '2025-01-01T00:00:00Z',
     createdAt: '2025-01-01T00:00:00Z'
   }),
-  // SDK 0.3.4 - Health check methods
   isHealthy: vi.fn().mockResolvedValue(true),
   ensureHealthy: vi.fn().mockResolvedValue(undefined),
-  // SDK 0.3.4 - Expiry management methods
+  ensureValidToken: vi.fn().mockResolvedValue(undefined),
+  refreshToken: vi.fn().mockResolvedValue(undefined),
   getTimeToExpiry: vi.fn().mockResolvedValue(600),
   isExpiringSoon: vi.fn().mockResolvedValue(false),
   getExpiryInfo: vi.fn().mockResolvedValue(defaultExpiryInfo),
@@ -114,7 +113,7 @@ const loadService = async (
   return { hopxService, create };
 };
 
-describe('HopxService executeCode (SDK 0.3.4)', () => {
+describe('HopxService executeCode', () => {
   beforeEach(() => {
     vi.resetModules();
   });
@@ -144,16 +143,15 @@ describe('HopxService executeCode (SDK 0.3.4)', () => {
     await expectation;
   });
 
-  it('executes code successfully with preflight option (SDK 0.3.4)', async () => {
+  it('executes code successfully with preflight option', async () => {
     const sandbox = createSandboxStub();
-    const { hopxService } = await loadService(sandbox, { MAX_EXECUTION_TIMEOUT: 200 });
+    const { hopxService } = await loadService(sandbox, { MAX_EXECUTION_TIMEOUT: 1000 });
 
     const result = await hopxService.executeCode('print("hi")', 'python');
 
-    // SDK 0.3.4: runCode should include preflight: true
     expect((sandbox.runCode as MockFn)).toHaveBeenCalledWith('print("hi")', {
       language: 'python',
-      timeout: 120,
+      timeout: 900,  // Python default timeout
       preflight: true
     });
     expect(result.richOutputs?.[0]).toEqual({ type: 'text', data: 'hello' });
@@ -192,7 +190,7 @@ describe('HopxService executeCode (SDK 0.3.4)', () => {
   it('recreates sandbox when SDK isHealthy returns false', async () => {
     const firstSandbox = createSandboxStub({
       sandboxId: 'sandbox-old',
-      isHealthy: vi.fn().mockResolvedValue(false) // SDK 0.3.4
+      isHealthy: vi.fn().mockResolvedValue(false)
     });
     const newSandbox = createSandboxStub({ sandboxId: 'sandbox-new' });
     const createMock = vi.fn().mockResolvedValueOnce(firstSandbox).mockResolvedValueOnce(newSandbox);
@@ -213,7 +211,7 @@ describe('HopxService executeCode (SDK 0.3.4)', () => {
   it('refreshes sandbox when SDK isExpiringSoon returns true', async () => {
     const firstSandbox = createSandboxStub({
       sandboxId: 'sandbox-expiring',
-      isExpiringSoon: vi.fn().mockResolvedValue(true), // SDK 0.3.4
+      isExpiringSoon: vi.fn().mockResolvedValue(true),
       getExpiryInfo: vi.fn().mockResolvedValue({
         ...defaultExpiryInfo,
         isExpiringSoon: true,
@@ -306,7 +304,7 @@ describe('HopxService executeCode (SDK 0.3.4)', () => {
     expect(missing.exists).toBe(false);
   });
 
-  it('classifies SDK error types correctly (SDK 0.3.4)', async () => {
+  it('classifies SDK error types correctly', async () => {
     const sandbox = createSandboxStub();
 
     vi.doMock('../config/env', () => ({
@@ -323,7 +321,6 @@ describe('HopxService executeCode (SDK 0.3.4)', () => {
     const { default: hopxService } = await import('./hopx.service');
     const classify = (hopxService as unknown as { classifyError: (err: unknown) => { category: string; recoverable: boolean } }).classifyError;
 
-    // SDK 0.3.4: Native error types
     expect(classify(new MockSandboxExpiredError('expired')).category).toBe('expired');
     expect(classify(new MockTokenExpiredError()).category).toBe('token');
 
@@ -346,7 +343,7 @@ describe('HopxService executeCode (SDK 0.3.4)', () => {
     expect(healthy).toBe(initial);
   });
 
-  it('provides health summary with expiry info (SDK 0.3.4)', async () => {
+  it('provides health summary with expiry info', async () => {
     const sandbox = createSandboxStub({
       getHealth: vi.fn().mockResolvedValue({
         status: 'ok',
@@ -376,7 +373,6 @@ describe('HopxService executeCode (SDK 0.3.4)', () => {
     const result = await hopxService.getHealth();
     expect(result.isHealthy).toBe(true);
     expect(result.metrics?.errors).toBe(1);
-    // SDK 0.3.4: Expiry info in health response
     expect(result.expiry?.timeToExpiry).toBe(500);
     expect(result.expiry?.isExpiringSoon).toBe(false);
 
@@ -408,7 +404,7 @@ describe('HopxService executeCode (SDK 0.3.4)', () => {
     await expect(hopxService.destroySandboxInstance(sandbox, 'sandbox-error')).rejects.toThrow();
   });
 
-  it('auto-recovers from SandboxExpiredError (SDK 0.3.4)', async () => {
+  it('auto-recovers from SandboxExpiredError', async () => {
     const expiredSandbox = createSandboxStub({
       sandboxId: 'expired-sandbox',
       isExpiringSoon: vi.fn().mockRejectedValue(new MockSandboxExpiredError('Sandbox expired', {
@@ -437,12 +433,10 @@ describe('HopxService executeCode (SDK 0.3.4)', () => {
 
     await hopxService.executeCode('1', 'javascript');
 
-    // SDK 0.3.4: Expiry monitor should be started on creation
     expect(sandbox.startExpiryMonitor).toHaveBeenCalled();
 
     await hopxService.destroySandbox();
 
-    // SDK 0.3.4: Expiry monitor should be stopped on destruction
     expect(sandbox.stopExpiryMonitor).toHaveBeenCalled();
   });
 });

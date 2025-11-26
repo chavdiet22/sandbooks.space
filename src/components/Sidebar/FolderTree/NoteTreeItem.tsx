@@ -1,6 +1,6 @@
 import React, { useCallback } from 'react';
 import { clsx } from 'clsx';
-import { VscFile, VscCopy, VscTrash, VscEllipsis } from 'react-icons/vsc';
+import { VscFile, VscCopy, VscTrash } from 'react-icons/vsc';
 import type { Note } from '../../../types';
 import { formatTimestamp } from '../../../utils/formatTimestamp';
 import { ContextMenu } from '../../ui/ContextMenu';
@@ -59,7 +59,7 @@ export const NoteTreeItem: React.FC<NoteTreeItemProps> = ({
   ];
 
   return (
-    <ContextMenu items={contextMenuItems}>
+    <ContextMenu items={contextMenuItems} showTrigger>
       <div
         id={`note-${note.id}`}
         data-note-id={note.id}
@@ -110,11 +110,6 @@ export const NoteTreeItem: React.FC<NoteTreeItemProps> = ({
           >
             {timestamp.relative}
           </time>
-        </div>
-
-        {/* Context menu hint */}
-        <div className="absolute right-8 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-30 transition-opacity duration-150 pointer-events-none">
-          <VscEllipsis size={14} className="text-stone-500 dark:text-stone-400" />
         </div>
 
         {/* Delete button */}
