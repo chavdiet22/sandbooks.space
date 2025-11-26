@@ -22,17 +22,6 @@ export default defineConfig({
     globals: true,
     environment: 'happy-dom',
     setupFiles: ['./src/test/setup.ts'],
-    // Suppress React act() warnings in test output
-    onConsoleLog: (log, type) => {
-      if (type === 'warn' && (log.includes('not configured to support act') || 
-          String(log).includes('not configured to support act'))) {
-        return false; // Suppress this specific warning
-      }
-    },
-    // Filter stderr output
-    outputFile: {
-      // Suppress warnings in output
-    },
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html', 'lcov'],
