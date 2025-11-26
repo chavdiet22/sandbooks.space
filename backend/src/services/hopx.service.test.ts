@@ -143,7 +143,7 @@ describe('HopxService executeCode', () => {
     await expectation;
   });
 
-  it('executes code successfully with preflight option', async () => {
+  it('executes code successfully', async () => {
     const sandbox = createSandboxStub();
     const { hopxService } = await loadService(sandbox, { MAX_EXECUTION_TIMEOUT: 1000 });
 
@@ -151,8 +151,7 @@ describe('HopxService executeCode', () => {
 
     expect((sandbox.runCode as MockFn)).toHaveBeenCalledWith('print("hi")', {
       language: 'python',
-      timeout: 900,  // Python default timeout
-      preflight: true
+      timeout: 900  // Python default timeout
     });
     expect(result.richOutputs?.[0]).toEqual({ type: 'text', data: 'hello' });
     expect(result.exitCode).toBe(0);
@@ -285,8 +284,7 @@ describe('HopxService executeCode', () => {
     // TypeScript has its own default timeout of 60s, but runs as JavaScript
     expect((sandbox.runCode as MockFn)).toHaveBeenCalledWith(expect.any(String), {
       language: 'javascript',
-      timeout: 60,
-      preflight: true
+      timeout: 60
     });
   });
 

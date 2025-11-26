@@ -89,8 +89,11 @@ describe('payload decoder', () => {
 
       const result = decodePayload(token);
 
-      expect(result.metadata.createdAt).toBeInstanceOf(Date);
-      expect(result.metadata.updatedAt).toBeInstanceOf(Date);
+      // Timestamps are ISO strings to avoid Zustand serialization issues
+      expect(typeof result.metadata.createdAt).toBe('string');
+      expect(typeof result.metadata.updatedAt).toBe('string');
+      expect(result.metadata.createdAt).toMatch(/^\d{4}-\d{2}-\d{2}T/);
+      expect(result.metadata.updatedAt).toMatch(/^\d{4}-\d{2}-\d{2}T/);
       expect(result.metadata.isExpired).toBe(false);
     });
 
@@ -109,7 +112,9 @@ describe('payload decoder', () => {
 
       const result = decodePayload(token);
 
-      expect(result.metadata.expiresAt).toBeInstanceOf(Date);
+      // expiresAt is an ISO string
+      expect(typeof result.metadata.expiresAt).toBe('string');
+      expect(result.metadata.expiresAt).toMatch(/^\d{4}-\d{2}-\d{2}T/);
       expect(result.metadata.isExpired).toBe(false);
     });
 
@@ -220,7 +225,9 @@ describe('payload decoder', () => {
 
       expect(metadata).not.toBeNull();
       expect(metadata?.version).toBe(1);
-      expect(metadata?.createdAt).toBeInstanceOf(Date);
+      // createdAt is an ISO string
+      expect(typeof metadata?.createdAt).toBe('string');
+      expect(metadata?.createdAt).toMatch(/^\d{4}-\d{2}-\d{2}T/);
     });
 
     it('should return null for invalid token', () => {

@@ -128,12 +128,12 @@ export function decodePayload(token: string): DecodeResult {
     );
   }
 
-  // Build metadata
+  // Build metadata with ISO strings (prevents Zustand serialization issues)
   const metadata: DecodeResult['metadata'] = {
     version: typedPayload.v,
-    createdAt: new Date(typedPayload.c * 1000),
-    updatedAt: new Date(typedPayload.u * 1000),
-    expiresAt: typedPayload.x ? new Date(typedPayload.x * 1000) : undefined,
+    createdAt: new Date(typedPayload.c * 1000).toISOString(),
+    updatedAt: new Date(typedPayload.u * 1000).toISOString(),
+    expiresAt: typedPayload.x ? new Date(typedPayload.x * 1000).toISOString() : undefined,
     isExpired: false, // Would have thrown above if expired
     tokenLength: token.length,
   };

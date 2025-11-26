@@ -171,14 +171,15 @@ export interface EncodeResult {
 
 /**
  * Decoding result with metadata
+ * NOTE: Uses ISO strings instead of Date objects to prevent Zustand serialization issues
  */
 export interface DecodeResult {
   payloadNote: PayloadNote;
   metadata: {
     version: number;
-    createdAt: Date;
-    updatedAt: Date;
-    expiresAt?: Date;
+    createdAt: string;
+    updatedAt: string;
+    expiresAt?: string;
     isExpired: boolean;
     tokenLength: number;
   };

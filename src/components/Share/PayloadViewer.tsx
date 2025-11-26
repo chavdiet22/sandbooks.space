@@ -43,11 +43,11 @@ export const PayloadViewerBanner = ({ note, metadata }: PayloadViewerBannerProps
     window.history.replaceState(null, '', window.location.pathname);
   }, [clearPayload]);
 
-  // Format expiry date
+  // Format expiry date (metadata.expiresAt is ISO string)
   const expiryText = useMemo(() => {
     if (!metadata.expiresAt) return null;
     const now = new Date();
-    const expiry = metadata.expiresAt;
+    const expiry = new Date(metadata.expiresAt);
     const diff = expiry.getTime() - now.getTime();
 
     if (diff <= 0) return 'Expired';

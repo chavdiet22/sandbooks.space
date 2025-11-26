@@ -142,6 +142,13 @@ az webapp config set \
   --startup-file "$STARTUP_CMD" \
   --output none
 
+log "Enabling Always On (prevents cold start issues)"
+az webapp config set \
+  --name "$BACKEND_NAME" \
+  --resource-group "$RESOURCE_GROUP" \
+  --always-on true \
+  --output none
+
 log "Locking CORS to frontend (${FRONTEND_URL})"
 az webapp cors remove --name "$BACKEND_NAME" --resource-group "$RESOURCE_GROUP" --allowed-origins '*' >/dev/null 2>&1 || true
 az webapp cors add --name "$BACKEND_NAME" --resource-group "$RESOURCE_GROUP" --allowed-origins "$FRONTEND_URL" --output none
@@ -175,6 +182,11 @@ popd >/dev/null
 echo ""
 echo -e "${BLUE}[2/2] Frontend (${FRONTEND_NAME})${NC}"
 
+# Validate API_URL before building
+if [[ "$API_URL" == *"localhost"* ]]; then
+  fail "CRITICAL: API_URL contains 'localhost' ($API_URL). Set VITE_API_URL to production URL."
+fi
+
 log "Writing .env with API_URL=$API_URL"
 {
   echo "VITE_API_URL=$API_URL"
@@ -189,6 +201,15 @@ npm ci --silent
 
 log "Building frontend"
 npm run build --silent
+
+log "Validating build output (checking for localhost leaks)"
+if grep -r '"http://localhost:' dist/assets/*.js >/dev/null 2>&1; then
+  fail "CRITICAL: Built frontend contains localhost URL! Check .env files and VITE_API_URL."
+fi
+if ! grep -q "\"$API_URL\"" dist/assets/index-*.js 2>/dev/null; then
+  log "WARNING: Could not verify API_URL ($API_URL) in built output"
+fi
+success "Build validation passed"
 
 log "Ensuring Linux plan ${FRONTEND_PLAN}"
 if ! az appservice plan show --name "$FRONTEND_PLAN" --resource-group "$RESOURCE_GROUP" >/dev/null 2>&1; then

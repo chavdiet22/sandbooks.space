@@ -376,8 +376,9 @@ class HopxService {
 
       const result = await sandbox.runCode(code, {
         language: runtimeLanguage,
-        timeout: executionTimeout,
-        preflight: true // Ensures sandbox is healthy before execution
+        timeout: executionTimeout
+        // NOTE: Removed preflight: true - health is already verified by getHealthySandbox()
+        // Redundant preflight checks were cascading failures and triggering the circuit breaker
       }).catch((err: unknown) => {
         logger.error('Hopx runCode failed', {
           sandboxId: this.sandboxId,

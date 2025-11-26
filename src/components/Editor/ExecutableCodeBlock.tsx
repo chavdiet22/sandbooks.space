@@ -1,20 +1,23 @@
 import { NodeViewWrapper } from '@tiptap/react';
 import type { NodeViewProps } from '@tiptap/react';
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { m, AnimatePresence } from 'framer-motion';
 import type { Language, ExecutionResult } from '../../types';
 import { useNotesStore } from '../../store/notesStore';
 import { showToast as toast } from '../../utils/toast';
 import { executionModeManager } from '../../services/execution/executionModeManager';
 import { VscClearAll } from 'react-icons/vsc';
+import { LuRefreshCw } from 'react-icons/lu';
 import { Button } from '../ui/Button';
 import { CopyButton } from '../ui/CopyButton';
+import { Tooltip } from '../ui/Tooltip';
 import { LanguageIcon } from './LanguageIcon';
 import { CodeMirrorEditor } from './CodeMirrorEditor';
 import { recordOnboardingEvent } from '../../utils/onboardingMetrics';
 import { NotebookOutput } from '../Notebook/NotebookOutput';
-import { executeCell } from '../../services/notebook';
+import { executeCell, restartKernel } from '../../services/notebook';
 import type { JupyterOutput } from '../../types/notebook';
+import { KernelStatusDot, type KernelStatus } from './KernelStatusDot';
 import {
   enhancedExecutionVariants,
   executionCountVariants,
@@ -40,6 +43,8 @@ export const ExecutableCodeBlockComponent = ({ node, updateAttributes }: NodeVie
   const [elapsedTime, setElapsedTime] = useState(0);
   const [executionFeedback, setExecutionFeedback] = useState<'idle' | 'running' | 'success' | 'error'>('idle');
   const [countAnimationKey, setCountAnimationKey] = useState(0);
+  const [kernelStatus, setKernelStatus] = useState<KernelStatus>('disconnected');
+  const [isRestartingKernel, setIsRestartingKernel] = useState(false);
   const startTimeRef = useRef<number | null>(null);
   const prevCountRef = useRef<number | undefined>(undefined);
   const language = (node.attrs.language as Language) || 'python';
@@ -67,6 +72,47 @@ export const ExecutableCodeBlockComponent = ({ node, updateAttributes }: NodeVie
       prevCountRef.current = executionCount;
     }
   }, [executionCount]);
+
+  // Update kernel status based on execution state (for Python only)
+  useEffect(() => {
+    if (language !== 'python') return;
+
+    if (isExecuting) {
+      setKernelStatus('busy');
+    } else if (executionCount && executionCount > 0) {
+      setKernelStatus('idle');
+    } else {
+      setKernelStatus('disconnected');
+    }
+  }, [isExecuting, executionCount, language]);
+
+  // Handle kernel restart for Python sessions
+  const handleRestartKernel = useCallback(async () => {
+    if (!activeNoteId || isRestartingKernel) return;
+
+    setIsRestartingKernel(true);
+    toast.loading('Restarting kernel...', { id: 'kernel-restart' });
+
+    try {
+      await restartKernel(activeNoteId);
+      // Clear outputs and reset execution count
+      updateAttributes({
+        jupyterOutputs: undefined,
+        executionCount: undefined,
+        executionResult: undefined,
+      });
+      setKernelStatus('disconnected');
+      toast.success('Kernel restarted. All variables cleared.', {
+        id: 'kernel-restart',
+        duration: 4000,
+      });
+    } catch {
+      toast.error('Failed to restart kernel', { id: 'kernel-restart' });
+      setKernelStatus('error');
+    } finally {
+      setIsRestartingKernel(false);
+    }
+  }, [activeNoteId, isRestartingKernel, updateAttributes]);
 
   // Live elapsed time counter during execution
   useEffect(() => {
@@ -271,24 +317,55 @@ export const ExecutableCodeBlockComponent = ({ node, updateAttributes }: NodeVie
           {/* Language Selector */}
           <div className="relative">
             <div className="flex items-center gap-2">
-              {/* Execution Counter Badge with pop animation */}
+              {/* Jupyter-style Execution Counter with Kernel Status */}
               {language === 'python' && (
-                <AnimatePresence mode="wait">
-                  <m.span
-                    key={countAnimationKey}
-                    variants={executionCountVariants}
-                    initial="initial"
-                    animate={countAnimationKey > 0 ? "update" : "initial"}
-                    className={`text-xs font-mono px-2 py-0.5 rounded ${
+                <div className="flex items-center gap-1.5">
+                  {/* Kernel Status + Counter with Tooltip */}
+                  <Tooltip
+                    content={
                       executionCount
-                        ? "text-stone-600 dark:text-stone-300 bg-stone-200/50 dark:bg-stone-700/50"
-                        : "text-stone-400 dark:text-stone-500 bg-stone-100 dark:bg-stone-800/50"
-                    }`}
-                    title={executionCount ? `Execution #${executionCount}` : "Not yet executed"}
+                        ? `Run #${executionCount} • ${kernelStatus === 'idle' ? 'Kernel ready' : kernelStatus === 'busy' ? 'Executing...' : 'No session'}`
+                        : 'Not yet executed • Run to start session'
+                    }
+                    placement="top"
                   >
-                    [{executionCount ?? '·'}]
-                  </m.span>
-                </AnimatePresence>
+                    <span className="inline-flex items-center gap-1.5">
+                      <KernelStatusDot status={kernelStatus} />
+                      <AnimatePresence mode="wait">
+                        <m.span
+                          key={countAnimationKey}
+                          variants={executionCountVariants}
+                          initial="initial"
+                          animate={countAnimationKey > 0 ? "update" : "initial"}
+                          className={`text-xs font-mono px-1.5 py-0.5 rounded cursor-default ${
+                            executionCount
+                              ? "text-stone-600 dark:text-stone-300 bg-stone-200/50 dark:bg-stone-700/50"
+                              : "text-stone-400 dark:text-stone-500 bg-stone-100 dark:bg-stone-800/50"
+                          }`}
+                        >
+                          [{executionCount ?? '·'}]
+                        </m.span>
+                      </AnimatePresence>
+                    </span>
+                  </Tooltip>
+
+                  {/* Restart Kernel Button (only shown when session exists) */}
+                  {executionCount && executionCount > 0 && (
+                    <Tooltip content="Restart kernel (clears variables)" placement="top">
+                      <button
+                        onClick={handleRestartKernel}
+                        disabled={isRestartingKernel || isExecuting}
+                        className="p-1 rounded text-stone-500 hover:text-amber-600 dark:text-stone-400 dark:hover:text-amber-400 hover:bg-stone-200/50 dark:hover:bg-stone-700/50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        aria-label="Restart kernel"
+                      >
+                        <LuRefreshCw
+                          size={14}
+                          className={isRestartingKernel ? 'animate-spin' : ''}
+                        />
+                      </button>
+                    </Tooltip>
+                  )}
+                </div>
               )}
               <LanguageIcon language={language} size={20} className="text-emerald-400 flex-shrink-0" />
               <select
@@ -422,6 +499,30 @@ export const ExecutableCodeBlockComponent = ({ node, updateAttributes }: NodeVie
             {language === 'python' && jupyterOutputs && (
               <div className="relative px-5 py-4 bg-white/80 dark:bg-stone-800/80 backdrop-blur-sm">
                 <NotebookOutput outputs={jupyterOutputs} />
+                {/* Error Recovery Actions for Python */}
+                {jupyterOutputs.some(o => o.output_type === 'error') && (
+                  <div className="flex items-center gap-2 mt-4 pt-3 border-t border-red-200/50 dark:border-red-900/30">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleExecute}
+                      disabled={isExecuting}
+                      className="text-red-700 dark:text-red-300 border-red-300 dark:border-red-700 hover:bg-red-50 dark:hover:bg-red-900/20"
+                    >
+                      <LuRefreshCw size={14} className="mr-1.5" />
+                      Try Again
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={handleRestartKernel}
+                      disabled={isRestartingKernel}
+                      className="text-stone-600 dark:text-stone-400"
+                    >
+                      Restart Kernel
+                    </Button>
+                  </div>
+                )}
               </div>
             )}
 
@@ -484,6 +585,27 @@ export const ExecutableCodeBlockComponent = ({ node, updateAttributes }: NodeVie
                           </>
                         )}
                       </pre>
+                      {/* Error Recovery Actions */}
+                      <div className="flex items-center gap-2 mt-4 pt-3 border-t border-red-200/50 dark:border-red-900/30">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={handleExecute}
+                          disabled={isExecuting}
+                          className="text-red-700 dark:text-red-300 border-red-300 dark:border-red-700 hover:bg-red-50 dark:hover:bg-red-900/20"
+                        >
+                          <LuRefreshCw size={14} className="mr-1.5" />
+                          Try Again
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={handleRestartSandbox}
+                          className="text-stone-600 dark:text-stone-400"
+                        >
+                          Restart Workspace
+                        </Button>
+                      </div>
                     </div>
                   );
                 })()}

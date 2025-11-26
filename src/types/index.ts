@@ -88,11 +88,12 @@ export interface QueuedCodeExecution {
 }
 
 // Payload link metadata
+// NOTE: Uses ISO strings instead of Date objects to prevent Zustand serialization issues
 export interface PayloadMetadata {
   version: number;
-  createdAt: Date;
-  updatedAt: Date;
-  expiresAt?: Date;
+  createdAt: string;
+  updatedAt: string;
+  expiresAt?: string;
   isExpired: boolean;
   tokenLength: number;
 }
