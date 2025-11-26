@@ -3,20 +3,75 @@
  *
  * ProseMirror does not allow empty text nodes (text nodes with empty string).
  * This utility removes them from JSONContent before loading into TipTap.
+ * Also validates structural integrity to prevent crashes from malformed content.
  */
 
 import type { JSONContent } from '@tiptap/react';
 
+// Maximum recursion depth to prevent infinite loops from circular references
+const MAX_SANITIZE_DEPTH = 100;
+
 /**
- * Recursively sanitize TipTap JSONContent by removing empty text nodes
- * and cleaning up empty content arrays.
+ * Validate that a node has valid structure for TipTap.
+ * Returns true if the node is structurally valid, false if it should be filtered out.
+ *
+ * @param node - The node to validate
+ * @returns true if valid TipTap node structure
+ */
+export function isValidNode(node: unknown): node is JSONContent {
+  // Must be a non-null object
+  if (node === null || typeof node !== 'object') {
+    return false;
+  }
+
+  const n = node as Record<string, unknown>;
+
+  // Must have a string 'type' property
+  if (typeof n.type !== 'string' || n.type.length === 0) {
+    return false;
+  }
+
+  // If 'content' exists, must be an array
+  if ('content' in n && !Array.isArray(n.content)) {
+    return false;
+  }
+
+  // If 'attrs' exists, must be an object (not null, not array)
+  if ('attrs' in n && (typeof n.attrs !== 'object' || n.attrs === null || Array.isArray(n.attrs))) {
+    return false;
+  }
+
+  // Text nodes must have string 'text' property
+  if (n.type === 'text' && 'text' in n && typeof n.text !== 'string') {
+    return false;
+  }
+
+  return true;
+}
+
+/**
+ * Recursively sanitize TipTap JSONContent by removing empty text nodes,
+ * invalid nodes, and cleaning up empty content arrays.
  *
  * @param content - The JSONContent to sanitize
+ * @param depth - Current recursion depth (internal use)
  * @returns Sanitized JSONContent safe for TipTap
  */
-export function sanitizeContent(content: JSONContent): JSONContent {
+export function sanitizeContent(content: JSONContent, depth: number = 0): JSONContent {
+  // Prevent infinite recursion from circular references or deeply nested content
+  if (depth > MAX_SANITIZE_DEPTH) {
+    console.warn('[ContentSanitizer] Max depth exceeded, returning empty paragraph');
+    return { type: 'paragraph' };
+  }
+
+  // Handle null/undefined
   if (!content) {
     return content;
+  }
+
+  // Validate basic structure - if invalid, return safe fallback
+  if (!isValidNode(content)) {
+    return { type: 'doc', content: [{ type: 'paragraph' }] };
   }
 
   // Clone the content to avoid mutations
@@ -35,7 +90,8 @@ export function sanitizeContent(content: JSONContent): JSONContent {
   // Recursively sanitize content array
   if (result.content && Array.isArray(result.content)) {
     result.content = result.content
-      .map((node: JSONContent) => sanitizeContent(node))
+      .filter((node: unknown) => isValidNode(node))
+      .map((node: JSONContent) => sanitizeContent(node, depth + 1))
       .filter((node: JSONContent) => {
         // Filter out empty text nodes
         if (node.type === '__empty__') {

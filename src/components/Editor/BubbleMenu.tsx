@@ -80,7 +80,7 @@ export const BubbleMenu = ({ editor }: BubbleMenuProps) => {
       {/* Inner glow overlay for glass depth */}
       <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-white/40 via-transparent to-transparent dark:from-white/5 pointer-events-none" aria-hidden="true" />
       <button
-        onClick={() => editor.chain().focus().toggleBold().run()}
+        onClick={() => editor.commands.toggleBold()}
         className={clsx(
           'relative p-2 rounded-md transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500',
           editor.isActive('bold')
@@ -95,7 +95,7 @@ export const BubbleMenu = ({ editor }: BubbleMenuProps) => {
         </svg>
       </button>
       <button
-        onClick={() => editor.chain().focus().toggleItalic().run()}
+        onClick={() => editor.commands.toggleItalic()}
         className={clsx(
           'relative p-2 rounded-md transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500',
           editor.isActive('italic')
@@ -111,7 +111,7 @@ export const BubbleMenu = ({ editor }: BubbleMenuProps) => {
         </svg>
       </button>
       <button
-        onClick={() => editor.chain().focus().toggleUnderline().run()}
+        onClick={() => editor.commands.toggleUnderline()}
         className={clsx(
           'relative p-2 rounded-md transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500',
           editor.isActive('underline')

@@ -3,7 +3,7 @@ import { useReducedMotion } from 'framer-motion';
 import type { ReactNode } from 'react';
 
 /**
- * Spring transition matching fluid interface guidelines.
+ * Default spring transition for natural motion.
  * Uses ~80% damping for smooth motion that feels alive without excessive bounce.
  */
 const springTransition = {

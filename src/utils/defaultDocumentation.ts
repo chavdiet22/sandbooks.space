@@ -1,15 +1,17 @@
 /**
  * Sandbooks: Living Documentation
  *
- * Purpose: Comprehensive onboarding that teaches all features through action.
- * - Task-focused content
- * - Clear, concise writing
- * - Interactive examples
+ * Purpose: Onboarding documentation teaching features through concise guidance.
+ * - User-workflow organization
+ * - Concise, action-oriented writing
+ * - No task checklists (cleaner appearance)
  * - Complete feature coverage
+ * - Uses folders and tags to showcase those features
  *
  * VERSION HISTORY:
- * - 1: Initial documentation (9 notes)
- * - 2: Future updates...
+ * - 1: Initial documentation (9 notes) - 2025-01-15
+ * - 2: Reorganized to 8 notes, added Folders/GitHub/IPython - 2025-11-26
+ * - 2.1: Added Docs folder, improved tags - 2025-11-26
  *
  * When updating documentation:
  * 1. Increment DOCS_VERSION
@@ -19,19 +21,26 @@
 
 import { nanoid } from 'nanoid';
 import type { Note } from '../types';
+import type { Folder } from '../types/folder.types';
 
 /**
  * Documentation version number.
  * Increment this when making changes to default documentation.
  * Users with older versions will see an update notification.
  */
-export const DOCS_VERSION = 1;
+export const DOCS_VERSION = 3;
+
+/**
+ * Stable folder ID for documentation.
+ * Using a fixed ID allows updates to work correctly.
+ */
+export const DOCS_FOLDER_ID = 'sandbooks-docs-folder';
 
 /**
  * Date when documentation was last updated.
  * Used for display purposes in the update notification.
  */
-export const DOCS_UPDATED_AT = '2025-01-15';
+export const DOCS_UPDATED_AT = '2025-11-26';
 
 /**
  * Well-known titles for system documentation notes.
@@ -39,15 +48,31 @@ export const DOCS_UPDATED_AT = '2025-01-15';
  */
 export const SYSTEM_DOC_TITLES = [
   'Welcome',
-  'Writing Basics',
-  'Rich Formatting',
+  'Writing & Formatting',
   'Media & Embeds',
-  'Code & Terminal',
-  'Organization',
-  'Focus & Productivity',
-  'Data & Export',
-  'Install as App',
+  'Running Code',
+  'Using the Terminal',
+  'Organizing Notes',
+  'GitHub Sync',
+  'Sync & Export',
 ] as const;
+
+/**
+ * Create the default Docs folder for documentation notes.
+ * Uses a stable ID so updates can find and update it.
+ */
+export function createDefaultDocsFolder(): Folder {
+  const now = Date.now();
+  return {
+    id: DOCS_FOLDER_ID,
+    name: 'Docs',
+    parentId: null,
+    color: 'blue',
+    sortOrder: 0,
+    createdAt: now,
+    updatedAt: now,
+  };
+}
 
 export function createDefaultDocumentation(): Note[] {
   const now = Date.now();
@@ -65,6 +90,7 @@ export function createDefaultDocumentation(): Note[] {
     id: nanoid(),
     title: 'Welcome',
     isSystemDoc: true,
+    folderId: DOCS_FOLDER_ID,
     content: {
       type: 'doc',
       content: [
@@ -75,7 +101,7 @@ export function createDefaultDocumentation(): Note[] {
         },
         {
           type: 'paragraph',
-          content: [{ type: 'text', text: 'Sandbooks stores your notes and code locally. Your data stays on your device.' }],
+          content: [{ type: 'text', text: 'Sandbooks stores your notes locally. Your data stays on your device.' }],
         },
         {
           type: 'heading',
@@ -83,47 +109,39 @@ export function createDefaultDocumentation(): Note[] {
           content: [{ type: 'text', text: 'Quick Start' }],
         },
         {
-          type: 'paragraph',
-          content: [{ type: 'text', text: 'Start typing to create content. Use the toolbar above for formatting. Press ' }, { type: 'text', marks: [{ type: 'code' }], text: '/' }, { type: 'text', text: ' for commands or ' }, { type: 'text', marks: [{ type: 'code' }], text: '?' }, { type: 'text', text: ' for shortcuts.' }],
-        },
-        {
-          type: 'taskList',
+          type: 'bulletList',
           content: [
-            {
-              type: 'taskItem',
-              attrs: { checked: false },
-              content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Type something in this note' }] }]
-            },
-            {
-              type: 'taskItem',
-              attrs: { checked: false },
-              content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Press ' }, { type: 'text', marks: [{ type: 'code' }], text: '?' }, { type: 'text', text: ' to see keyboard shortcuts' }] }]
-            },
+            { type: 'listItem', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Start typing to create content' }] }] },
+            { type: 'listItem', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Press ' }, { type: 'text', marks: [{ type: 'code' }], text: '/' }, { type: 'text', text: ' for commands (headings, code, tables)' }] }] },
+            { type: 'listItem', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Press ' }, { type: 'text', marks: [{ type: 'code' }], text: '?' }, { type: 'text', text: ' for keyboard shortcuts' }] }] },
+            { type: 'listItem', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Press ' }, { type: 'text', marks: [{ type: 'code' }], text: 'Cmd+K' }, { type: 'text', text: ' to search notes' }] }] },
           ],
         },
       ],
     },
     tags: [
-      { id: nanoid(), name: 'welcome', color: 'blue', createdAt: t1.tag, updatedAt: t1.tag },
+      { id: nanoid(), name: 'getting-started', color: 'blue', createdAt: t1.tag, updatedAt: t1.tag },
+      { id: nanoid(), name: 'intro', color: 'gray', createdAt: t1.tag, updatedAt: t1.tag },
     ],
     codeBlocks: [],
     createdAt: t1.note,
     updatedAt: t1.note,
   });
 
-  // NOTE 2: Writing Basics
+  // NOTE 2: Writing & Formatting
   const t2 = getTimestamps(1000);
   notes.push({
     id: nanoid(),
-    title: 'Writing Basics',
+    title: 'Writing & Formatting',
     isSystemDoc: true,
+    folderId: DOCS_FOLDER_ID,
     content: {
       type: 'doc',
       content: [
         {
           type: 'heading',
           attrs: { level: 1 },
-          content: [{ type: 'text', text: 'Writing Basics' }],
+          content: [{ type: 'text', text: 'Writing & Formatting' }],
         },
         {
           type: 'paragraph',
@@ -154,7 +172,7 @@ export function createDefaultDocumentation(): Note[] {
           type: 'bulletList',
           content: [
             { type: 'listItem', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Type ' }, { type: 'text', marks: [{ type: 'code' }], text: '# ' }, { type: 'text', text: ' for heading 1, ' }, { type: 'text', marks: [{ type: 'code' }], text: '## ' }, { type: 'text', text: ' for heading 2, ' }, { type: 'text', marks: [{ type: 'code' }], text: '### ' }, { type: 'text', text: ' for heading 3' }] }] },
-            { type: 'listItem', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Or use ' }, { type: 'text', marks: [{ type: 'code' }], text: '/h1' }, { type: 'text', text: ', ' }, { type: 'text', marks: [{ type: 'code' }], text: '/h2' }, { type: 'text', text: ', ' }, { type: 'text', marks: [{ type: 'code' }], text: '/h3' }, { type: 'text', text: ' in the slash menu' }] }] },
+            { type: 'listItem', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Slash menu: ' }, { type: 'text', marks: [{ type: 'code' }], text: '/h1' }, { type: 'text', text: ', ' }, { type: 'text', marks: [{ type: 'code' }], text: '/h2' }, { type: 'text', text: ', ' }, { type: 'text', marks: [{ type: 'code' }], text: '/h3' }] }] },
             { type: 'listItem', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Keyboard: ' }, { type: 'text', marks: [{ type: 'code' }], text: 'Cmd+Alt+1/2/3' }, { type: 'text', text: ' to convert current line' }] }] },
           ],
         },
@@ -173,65 +191,17 @@ export function createDefaultDocumentation(): Note[] {
           ],
         },
         {
-          type: 'taskList',
-          content: [
-            { type: 'taskItem', attrs: { checked: false }, content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Try formatting text with ' }, { type: 'text', marks: [{ type: 'code' }], text: 'Cmd+B' }, { type: 'text', text: ' and ' }, { type: 'text', marks: [{ type: 'code' }], text: 'Cmd+I' }] }] },
-            { type: 'taskItem', attrs: { checked: false }, content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Create a heading by typing ' }, { type: 'text', marks: [{ type: 'code' }], text: '# ' }, { type: 'text', text: ' at the start of a line' }] }] },
-            { type: 'taskItem', attrs: { checked: false }, content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Start a list with ' }, { type: 'text', marks: [{ type: 'code' }], text: '- ' }, { type: 'text', text: ' or ' }, { type: 'text', marks: [{ type: 'code' }], text: '1. ' }] }] },
-          ],
-        },
-      ],
-    },
-    tags: [
-      { id: nanoid(), name: 'guide', color: 'gray', createdAt: t2.tag, updatedAt: t2.tag },
-    ],
-    codeBlocks: [],
-    createdAt: t2.note,
-    updatedAt: t2.note,
-  });
-
-  // NOTE 3: Rich Formatting
-  const t3 = getTimestamps(2000);
-  notes.push({
-    id: nanoid(),
-    title: 'Rich Formatting',
-    isSystemDoc: true,
-    content: {
-      type: 'doc',
-      content: [
-        {
-          type: 'heading',
-          attrs: { level: 1 },
-          content: [{ type: 'text', text: 'Rich Formatting' }],
-        },
-        {
-          type: 'paragraph',
-          content: [{ type: 'text', text: 'Control text appearance with colors, fonts, alignment, and advanced formatting.' }],
-        },
-        {
           type: 'heading',
           attrs: { level: 2 },
-          content: [{ type: 'text', text: 'Colors' }],
+          content: [{ type: 'text', text: 'Colors & Fonts' }],
         },
         {
           type: 'bulletList',
           content: [
             { type: 'listItem', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Text color: Select text, click the color button, choose a color' }] }] },
             { type: 'listItem', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Highlight color: Select text, click the highlight button, choose a color' }] }] },
-            { type: 'listItem', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Keyboard: ' }, { type: 'text', marks: [{ type: 'code' }], text: 'Cmd+Shift+C' }, { type: 'text', text: ' for text color, ' }, { type: 'text', marks: [{ type: 'code' }], text: 'Cmd+Shift+X' }, { type: 'text', text: ' for highlight' }] }] },
-          ],
-        },
-        {
-          type: 'heading',
-          attrs: { level: 2 },
-          content: [{ type: 'text', text: 'Fonts' }],
-        },
-        {
-          type: 'bulletList',
-          content: [
-            { type: 'listItem', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Font family: Click the font button, choose JetBrains Mono, Inter, or System' }] }] },
-            { type: 'listItem', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Font size: Click the font button, choose from 12px to 72px' }] }] },
-            { type: 'listItem', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Default: JetBrains Mono at 14px' }] }] },
+            { type: 'listItem', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Font family: JetBrains Mono (default), Inter, or System' }] }] },
+            { type: 'listItem', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Font size: 12px to 72px via font button' }] }] },
           ],
         },
         {
@@ -251,7 +221,7 @@ export function createDefaultDocumentation(): Note[] {
         {
           type: 'heading',
           attrs: { level: 2 },
-          content: [{ type: 'text', text: 'Advanced Text' }],
+          content: [{ type: 'text', text: 'Advanced' }],
         },
         {
           type: 'bulletList',
@@ -259,33 +229,27 @@ export function createDefaultDocumentation(): Note[] {
             { type: 'listItem', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Superscript: ' }, { type: 'text', marks: [{ type: 'code' }], text: 'Cmd+.' }, { type: 'text', text: ' (useful for footnotes, exponents)' }] }] },
             { type: 'listItem', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Subscript: ' }, { type: 'text', marks: [{ type: 'code' }], text: 'Cmd+,' }, { type: 'text', text: ' (useful for chemical formulas)' }] }] },
             { type: 'listItem', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Blockquote: Type ' }, { type: 'text', marks: [{ type: 'code' }], text: '> ' }, { type: 'text', text: ' or ' }, { type: 'text', marks: [{ type: 'code' }], text: 'Cmd+Shift+B' }] }] },
-            { type: 'listItem', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Code inline: Wrap text with backticks: ' }, { type: 'text', marks: [{ type: 'code' }], text: '`code`' }] }] },
-          ],
-        },
-        {
-          type: 'taskList',
-          content: [
-            { type: 'taskItem', attrs: { checked: false }, content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Select text and change its color' }] }] },
-            { type: 'taskItem', attrs: { checked: false }, content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Try different font sizes' }] }] },
-            { type: 'taskItem', attrs: { checked: false }, content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Align a paragraph with ' }, { type: 'text', marks: [{ type: 'code' }], text: 'Cmd+Shift+E' }] }] },
+            { type: 'listItem', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Inline code: Wrap text with backticks: ' }, { type: 'text', marks: [{ type: 'code' }], text: '`code`' }] }] },
           ],
         },
       ],
     },
     tags: [
-      { id: nanoid(), name: 'guide', color: 'gray', createdAt: t3.tag, updatedAt: t3.tag },
+      { id: nanoid(), name: 'formatting', color: 'blue', createdAt: t2.tag, updatedAt: t2.tag },
+      { id: nanoid(), name: 'markdown', color: 'gray', createdAt: t2.tag, updatedAt: t2.tag },
     ],
     codeBlocks: [],
-    createdAt: t3.note,
-    updatedAt: t3.note,
+    createdAt: t2.note,
+    updatedAt: t2.note,
   });
 
-  // NOTE 4: Media & Embeds
-  const t4 = getTimestamps(3000);
+  // NOTE 3: Media & Embeds
+  const t3 = getTimestamps(2000);
   notes.push({
     id: nanoid(),
     title: 'Media & Embeds',
     isSystemDoc: true,
+    folderId: DOCS_FOLDER_ID,
     content: {
       type: 'doc',
       content: [
@@ -348,40 +312,38 @@ export function createDefaultDocumentation(): Note[] {
             { type: 'listItem', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Right-click table for options: add rows, delete columns, merge cells' }] }] },
           ],
         },
-        {
-          type: 'taskList',
-          content: [
-            { type: 'taskItem', attrs: { checked: false }, content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Type ' }, { type: 'text', marks: [{ type: 'code' }], text: '/table' }, { type: 'text', text: ' to insert a table' }] }] },
-            { type: 'taskItem', attrs: { checked: false }, content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Try ' }, { type: 'text', marks: [{ type: 'code' }], text: '/image' }, { type: 'text', text: ' to add an image' }] }] },
-          ],
-        },
       ],
     },
     tags: [
-      { id: nanoid(), name: 'guide', color: 'gray', createdAt: t4.tag, updatedAt: t4.tag },
+      { id: nanoid(), name: 'media', color: 'pink', createdAt: t3.tag, updatedAt: t3.tag },
+      { id: nanoid(), name: 'tables', color: 'gray', createdAt: t3.tag, updatedAt: t3.tag },
     ],
     codeBlocks: [],
-    createdAt: t4.note,
-    updatedAt: t4.note,
+    createdAt: t3.note,
+    updatedAt: t3.note,
   });
 
-  // NOTE 5: Code & Terminal
-  const t5 = getTimestamps(4000);
+  // NOTE 4: Running Code - with multiple executable code blocks
+  const t4 = getTimestamps(3000);
+  const pythonBlockId = nanoid();
+  const jsBlockId = nanoid();
+  const magicBlockId = nanoid();
   notes.push({
     id: nanoid(),
-    title: 'Code & Terminal',
+    title: 'Running Code',
     isSystemDoc: true,
+    folderId: DOCS_FOLDER_ID,
     content: {
       type: 'doc',
       content: [
         {
           type: 'heading',
           attrs: { level: 1 },
-          content: [{ type: 'text', text: 'Code & Terminal' }],
+          content: [{ type: 'text', text: 'Running Code' }],
         },
         {
           type: 'paragraph',
-          content: [{ type: 'text', text: 'Run code in secure cloud sandboxes. Access a full Linux terminal.' }],
+          content: [{ type: 'text', text: 'Execute code in cloud sandboxes. Your machine stays safe.' }],
         },
         {
           type: 'heading',
@@ -392,68 +354,187 @@ export function createDefaultDocumentation(): Note[] {
           type: 'bulletList',
           content: [
             { type: 'listItem', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Type ' }, { type: 'text', marks: [{ type: 'code' }], text: '/code' }, { type: 'text', text: ' or ' }, { type: 'text', marks: [{ type: 'code' }], text: 'Cmd+Alt+C' }, { type: 'text', text: ' to insert a code block' }] }] },
-            { type: 'listItem', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Choose language: Python, JavaScript, TypeScript, Go, or Bash' }] }] },
+            { type: 'listItem', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Languages: Python, JavaScript, TypeScript, Go, Bash' }] }] },
             { type: 'listItem', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Click Run or press ' }, { type: 'text', marks: [{ type: 'code' }], text: 'Cmd+Enter' }, { type: 'text', text: ' to execute' }] }] },
-            { type: 'listItem', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Code runs in isolated sandboxes. Your local machine stays safe.' }] }] },
+            { type: 'listItem', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Hover for copy button to copy code or output' }] }] },
           ],
         },
         {
           type: 'heading',
           attrs: { level: 2 },
-          content: [{ type: 'text', text: 'Terminal' }],
+          content: [{ type: 'text', text: 'Try Python' }],
+        },
+        {
+          type: 'paragraph',
+          content: [{ type: 'text', text: 'Click Run to execute this Python code:' }],
+        },
+        {
+          type: 'executableCodeBlock',
+          attrs: { blockId: pythonBlockId },
+        },
+        {
+          type: 'heading',
+          attrs: { level: 2 },
+          content: [{ type: 'text', text: 'Try JavaScript' }],
+        },
+        {
+          type: 'paragraph',
+          content: [{ type: 'text', text: 'Switch languages with the dropdown:' }],
+        },
+        {
+          type: 'executableCodeBlock',
+          attrs: { blockId: jsBlockId },
+        },
+        {
+          type: 'heading',
+          attrs: { level: 2 },
+          content: [{ type: 'text', text: 'IPython Magic Commands' }],
+        },
+        {
+          type: 'paragraph',
+          content: [{ type: 'text', text: 'Python supports shell commands and IPython magics:' }],
         },
         {
           type: 'bulletList',
           content: [
-            { type: 'listItem', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Press ' }, { type: 'text', marks: [{ type: 'code' }], text: 'Ctrl+`' }, { type: 'text', text: ' to open the terminal' }] }] },
-            { type: 'listItem', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Full Linux shell with persistent working directory' }] }] },
-            { type: 'listItem', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Install packages, run git commands, check system status' }] }] },
-            { type: 'listItem', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Environment variables persist across sessions' }] }] },
+            { type: 'listItem', content: [{ type: 'paragraph', content: [{ type: 'text', marks: [{ type: 'code' }], text: '!pip install' }, { type: 'text', text: ' - Install packages' }] }] },
+            { type: 'listItem', content: [{ type: 'paragraph', content: [{ type: 'text', marks: [{ type: 'code' }], text: '!ls' }, { type: 'text', text: ', ' }, { type: 'text', marks: [{ type: 'code' }], text: '!pwd' }, { type: 'text', text: ' - Shell commands' }] }] },
+            { type: 'listItem', content: [{ type: 'paragraph', content: [{ type: 'text', marks: [{ type: 'code' }], text: '%cd' }, { type: 'text', text: ' - Change directory' }] }] },
+            { type: 'listItem', content: [{ type: 'paragraph', content: [{ type: 'text', marks: [{ type: 'code' }], text: '%%bash' }, { type: 'text', text: ' - Run cell as bash' }] }] },
           ],
         },
         {
-          type: 'taskList',
-          content: [
-            { type: 'taskItem', attrs: { checked: false }, content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Run the code block below' }] }] },
-            { type: 'taskItem', attrs: { checked: false }, content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Open terminal with ' }, { type: 'text', marks: [{ type: 'code' }], text: 'Ctrl+`' }] }] },
-          ],
+          type: 'executableCodeBlock',
+          attrs: { blockId: magicBlockId },
         },
       ],
     },
     tags: [
-      { id: nanoid(), name: 'code', color: 'amber', createdAt: t5.tag, updatedAt: t5.tag },
+      { id: nanoid(), name: 'code', color: 'amber', createdAt: t4.tag, updatedAt: t4.tag },
+      { id: nanoid(), name: 'python', color: 'green', createdAt: t4.tag, updatedAt: t4.tag },
     ],
     codeBlocks: [
       {
-        id: nanoid(),
-        code: 'print("Hello from Sandbooks!")\n\n# Calculate and display\nresult = 2 + 2\nprint(f"2 + 2 = {result}")',
+        id: pythonBlockId,
+        code: 'print("Hello from Sandbooks!")\n\nfor i in range(3):\n    print(f"Count: {i}")',
         language: 'python',
         output: undefined,
-        createdAt: t5.code,
-        updatedAt: t5.code,
+        createdAt: t4.code,
+        updatedAt: t4.code,
+      },
+      {
+        id: jsBlockId,
+        code: 'const greeting = "Hello from JavaScript!";\nconsole.log(greeting);\n\nconst numbers = [1, 2, 3, 4, 5];\nconsole.log("Sum:", numbers.reduce((a, b) => a + b, 0));',
+        language: 'javascript',
+        output: undefined,
+        createdAt: t4.code,
+        updatedAt: t4.code,
+      },
+      {
+        id: magicBlockId,
+        code: '# IPython magic commands demo\n!pwd\n!ls -la',
+        language: 'python',
+        output: undefined,
+        createdAt: t4.code,
+        updatedAt: t4.code,
       },
     ],
-    createdAt: t5.note,
-    updatedAt: t5.note,
+    createdAt: t4.note,
+    updatedAt: t4.note,
   });
 
-  // NOTE 6: Organization
-  const t6 = getTimestamps(5000);
+  // NOTE 5: Using the Terminal
+  const t5 = getTimestamps(4000);
   notes.push({
     id: nanoid(),
-    title: 'Organization',
+    title: 'Using the Terminal',
     isSystemDoc: true,
+    folderId: DOCS_FOLDER_ID,
     content: {
       type: 'doc',
       content: [
         {
           type: 'heading',
           attrs: { level: 1 },
-          content: [{ type: 'text', text: 'Organization' }],
+          content: [{ type: 'text', text: 'Using the Terminal' }],
         },
         {
           type: 'paragraph',
-          content: [{ type: 'text', text: 'Organize notes with tags, search, and navigation shortcuts.' }],
+          content: [{ type: 'text', text: 'Full Linux shell in the cloud.' }],
+        },
+        {
+          type: 'heading',
+          attrs: { level: 2 },
+          content: [{ type: 'text', text: 'Open Terminal' }],
+        },
+        {
+          type: 'bulletList',
+          content: [
+            { type: 'listItem', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Press ' }, { type: 'text', marks: [{ type: 'code' }], text: 'Ctrl+`' }, { type: 'text', text: ' to toggle terminal' }] }] },
+            { type: 'listItem', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Quake-style dropdown overlay' }] }] },
+            { type: 'listItem', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Press ' }, { type: 'text', marks: [{ type: 'code' }], text: 'Esc' }, { type: 'text', text: ' to close when terminal is open' }] }] },
+          ],
+        },
+        {
+          type: 'heading',
+          attrs: { level: 2 },
+          content: [{ type: 'text', text: 'Features' }],
+        },
+        {
+          type: 'bulletList',
+          content: [
+            { type: 'listItem', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Full Linux shell (bash)' }] }] },
+            { type: 'listItem', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Persistent working directory' }] }] },
+            { type: 'listItem', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Environment variables persist across sessions' }] }] },
+            { type: 'listItem', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Command history and tab completion' }] }] },
+            { type: 'listItem', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Install packages: ' }, { type: 'text', marks: [{ type: 'code' }], text: 'pip install' }, { type: 'text', text: ', ' }, { type: 'text', marks: [{ type: 'code' }], text: 'npm install' }] }] },
+            { type: 'listItem', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Run git commands, check system status' }] }] },
+          ],
+        },
+      ],
+    },
+    tags: [
+      { id: nanoid(), name: 'terminal', color: 'orange', createdAt: t5.tag, updatedAt: t5.tag },
+      { id: nanoid(), name: 'shell', color: 'gray', createdAt: t5.tag, updatedAt: t5.tag },
+    ],
+    codeBlocks: [],
+    createdAt: t5.note,
+    updatedAt: t5.note,
+  });
+
+  // NOTE 6: Organizing Notes
+  const t6 = getTimestamps(5000);
+  notes.push({
+    id: nanoid(),
+    title: 'Organizing Notes',
+    isSystemDoc: true,
+    folderId: DOCS_FOLDER_ID,
+    content: {
+      type: 'doc',
+      content: [
+        {
+          type: 'heading',
+          attrs: { level: 1 },
+          content: [{ type: 'text', text: 'Organizing Notes' }],
+        },
+        {
+          type: 'paragraph',
+          content: [{ type: 'text', text: 'Manage notes with folders, tags, and search.' }],
+        },
+        {
+          type: 'heading',
+          attrs: { level: 2 },
+          content: [{ type: 'text', text: 'Folders' }],
+        },
+        {
+          type: 'bulletList',
+          content: [
+            { type: 'listItem', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Click the folder icon in the sidebar header to create a folder' }] }] },
+            { type: 'listItem', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Drag notes into folders to organize them' }] }] },
+            { type: 'listItem', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Drag folders into folders to nest them (unlimited depth)' }] }] },
+            { type: 'listItem', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Right-click folder for color, rename, or delete' }] }] },
+            { type: 'listItem', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Toggle tree view vs flat view in the sidebar' }] }] },
+          ],
         },
         {
           type: 'heading',
@@ -464,8 +545,8 @@ export function createDefaultDocumentation(): Note[] {
           type: 'bulletList',
           content: [
             { type: 'listItem', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Add tags at the bottom of any note' }] }] },
-            { type: 'listItem', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Click the colored dot to change tag color across all notes' }] }] },
-            { type: 'listItem', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Tags help you group related notes' }] }] },
+            { type: 'listItem', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Click the colored dot to change tag color globally' }] }] },
+            { type: 'listItem', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Tags work across folders for cross-cutting organization' }] }] },
           ],
         },
         {
@@ -477,7 +558,7 @@ export function createDefaultDocumentation(): Note[] {
           type: 'bulletList',
           content: [
             { type: 'listItem', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Press ' }, { type: 'text', marks: [{ type: 'code' }], text: 'Cmd+K' }, { type: 'text', text: ' or ' }, { type: 'text', marks: [{ type: 'code' }], text: 'Ctrl+K' }, { type: 'text', text: ' to open search' }] }] },
-            { type: 'listItem', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Search note titles, content, and tags' }] }] },
+            { type: 'listItem', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Searches titles, content, and tags' }] }] },
             { type: 'listItem', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Press ' }, { type: 'text', marks: [{ type: 'code' }], text: '/' }, { type: 'text', text: ' when not typing to search' }] }] },
           ],
         },
@@ -490,119 +571,127 @@ export function createDefaultDocumentation(): Note[] {
           type: 'bulletList',
           content: [
             { type: 'listItem', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Toggle sidebar: ' }, { type: 'text', marks: [{ type: 'code' }], text: 'Cmd+\\' }, { type: 'text', text: ' or ' }, { type: 'text', marks: [{ type: 'code' }], text: 'Ctrl+\\' }] }] },
-            { type: 'listItem', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'New note: ' }, { type: 'text', marks: [{ type: 'code' }], text: 'Cmd+Alt+N' }, { type: 'text', text: ' or ' }, { type: 'text', marks: [{ type: 'code' }], text: 'Ctrl+Alt+N' }, { type: 'text', text: ', or press ' }, { type: 'text', marks: [{ type: 'code' }], text: 'c' }, { type: 'text', text: ' when not typing' }] }] },
-            { type: 'listItem', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Sidebar shows all notes with tags and last edited time' }] }] },
-          ],
-        },
-        {
-          type: 'taskList',
-          content: [
-            { type: 'taskItem', attrs: { checked: false }, content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Add a tag to this note' }] }] },
-            { type: 'taskItem', attrs: { checked: false }, content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Press ' }, { type: 'text', marks: [{ type: 'code' }], text: 'Cmd+K' }, { type: 'text', text: ' to search' }] }] },
+            { type: 'listItem', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'New note: ' }, { type: 'text', marks: [{ type: 'code' }], text: 'Cmd+Alt+N' }, { type: 'text', text: ' or press ' }, { type: 'text', marks: [{ type: 'code' }], text: 'c' }, { type: 'text', text: ' when not typing' }] }] },
+            { type: 'listItem', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Right-click note in sidebar for Copy as Markdown' }] }] },
           ],
         },
       ],
     },
     tags: [
-      { id: nanoid(), name: 'guide', color: 'gray', createdAt: t6.tag, updatedAt: t6.tag },
+      { id: nanoid(), name: 'folders', color: 'purple', createdAt: t6.tag, updatedAt: t6.tag },
+      { id: nanoid(), name: 'tags', color: 'emerald', createdAt: t6.tag, updatedAt: t6.tag },
     ],
     codeBlocks: [],
     createdAt: t6.note,
     updatedAt: t6.note,
   });
 
-  // NOTE 7: Focus & Productivity
+  // NOTE 7: GitHub Sync
   const t7 = getTimestamps(6000);
   notes.push({
     id: nanoid(),
-    title: 'Focus & Productivity',
+    title: 'GitHub Sync',
     isSystemDoc: true,
+    folderId: DOCS_FOLDER_ID,
     content: {
       type: 'doc',
       content: [
         {
           type: 'heading',
           attrs: { level: 1 },
-          content: [{ type: 'text', text: 'Focus & Productivity' }],
+          content: [{ type: 'text', text: 'GitHub Sync' }],
         },
         {
           type: 'paragraph',
-          content: [{ type: 'text', text: 'Use focus modes and shortcuts to work faster.' }],
+          content: [{ type: 'text', text: 'Sync notes to GitHub for backup and cross-device access.' }],
         },
         {
           type: 'heading',
           attrs: { level: 2 },
-          content: [{ type: 'text', text: 'Focus Modes' }],
+          content: [{ type: 'text', text: 'Connect' }],
         },
         {
           type: 'bulletList',
           content: [
-            { type: 'listItem', content: [{ type: 'paragraph', content: [{ type: 'text', marks: [{ type: 'bold' }], text: 'Typewriter Mode' }, { type: 'text', text: ': ' }, { type: 'text', marks: [{ type: 'code' }], text: 'Cmd+Alt+T' }, { type: 'text', text: ' automatically scrolls to keep your cursor centered vertically while typing. Perfect for long documents - you never need to manually scroll!' }] }] },
-            { type: 'listItem', content: [{ type: 'paragraph', content: [{ type: 'text', marks: [{ type: 'bold' }], text: 'Focus Mode' }, { type: 'text', text: ': ' }, { type: 'text', marks: [{ type: 'code' }], text: 'Cmd+Alt+F' }, { type: 'text', text: ' dims everything except the active paragraph' }] }] },
-            { type: 'listItem', content: [{ type: 'paragraph', content: [{ type: 'text', marks: [{ type: 'bold' }], text: 'Dark Mode' }, { type: 'text', text: ': Click the moon icon in the top right' }] }] },
+            { type: 'listItem', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Click the cloud icon in the header' }] }] },
+            { type: 'listItem', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Sign in with your GitHub account' }] }] },
+            { type: 'listItem', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Select an existing repository or create a new one' }] }] },
           ],
         },
         {
           type: 'heading',
           attrs: { level: 2 },
-          content: [{ type: 'text', text: 'Slash Commands' }],
+          content: [{ type: 'text', text: 'Push & Pull' }],
         },
         {
           type: 'bulletList',
           content: [
-            { type: 'listItem', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Type ' }, { type: 'text', marks: [{ type: 'code' }], text: '/' }, { type: 'text', text: ' on a new line to see all commands' }] }] },
-            { type: 'listItem', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Commands: headings, lists, code, table, image, YouTube, and more' }] }] },
-            { type: 'listItem', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Filter by typing: ' }, { type: 'text', marks: [{ type: 'code' }], text: '/code' }, { type: 'text', text: ' shows code-related commands' }] }] },
+            { type: 'listItem', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Push: Upload local changes to GitHub' }] }] },
+            { type: 'listItem', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Pull: Download changes from GitHub' }] }] },
+            { type: 'listItem', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Notes are stored as Markdown files' }] }] },
+            { type: 'listItem', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Folder structure is preserved' }] }] },
           ],
         },
         {
           type: 'heading',
           attrs: { level: 2 },
-          content: [{ type: 'text', text: 'Keyboard Shortcuts' }],
+          content: [{ type: 'text', text: 'Conflicts' }],
+        },
+        {
+          type: 'paragraph',
+          content: [{ type: 'text', text: 'When local and GitHub have different changes:' }],
         },
         {
           type: 'bulletList',
           content: [
-            { type: 'listItem', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Press ' }, { type: 'text', marks: [{ type: 'code' }], text: '?' }, { type: 'text', text: ' to see all shortcuts' }] }] },
-            { type: 'listItem', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Shortcuts work in the editor and globally' }] }] },
-            { type: 'listItem', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Common: ' }, { type: 'text', marks: [{ type: 'code' }], text: 'Cmd+B' }, { type: 'text', text: ' bold, ' }, { type: 'text', marks: [{ type: 'code' }], text: 'Cmd+K' }, { type: 'text', text: ' link, ' }, { type: 'text', marks: [{ type: 'code' }], text: 'Cmd+Enter' }, { type: 'text', text: ' run code' }] }] },
+            { type: 'listItem', content: [{ type: 'paragraph', content: [{ type: 'text', marks: [{ type: 'bold' }], text: 'Merge both' }, { type: 'text', text: ': Combines changes from local and GitHub' }] }] },
+            { type: 'listItem', content: [{ type: 'paragraph', content: [{ type: 'text', marks: [{ type: 'bold' }], text: 'Use GitHub' }, { type: 'text', text: ': Overwrites local notes with GitHub version' }] }] },
+            { type: 'listItem', content: [{ type: 'paragraph', content: [{ type: 'text', marks: [{ type: 'bold' }], text: 'Use local' }, { type: 'text', text: ': Overwrites GitHub with local notes' }] }] },
           ],
         },
         {
-          type: 'taskList',
+          type: 'heading',
+          attrs: { level: 2 },
+          content: [{ type: 'text', text: 'Status' }],
+        },
+        {
+          type: 'bulletList',
           content: [
-            { type: 'taskItem', attrs: { checked: false }, content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Try typewriter mode with ' }, { type: 'text', marks: [{ type: 'code' }], text: 'Cmd+Alt+T' }] }] },
-            { type: 'taskItem', attrs: { checked: false }, content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Type ' }, { type: 'text', marks: [{ type: 'code' }], text: '/' }, { type: 'text', text: ' to see slash commands' }] }] },
-            { type: 'taskItem', attrs: { checked: false }, content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Press ' }, { type: 'text', marks: [{ type: 'code' }], text: '?' }, { type: 'text', text: ' to view all shortcuts' }] }] },
+            { type: 'listItem', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Header shows sync status' }] }] },
+            { type: 'listItem', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Green check: All synced' }] }] },
+            { type: 'listItem', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Orange dot: Changes to push or pull' }] }] },
+            { type: 'listItem', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Red indicator: Conflict needs resolution' }] }] },
           ],
         },
       ],
     },
     tags: [
-      { id: nanoid(), name: 'guide', color: 'gray', createdAt: t7.tag, updatedAt: t7.tag },
+      { id: nanoid(), name: 'github', color: 'gray', createdAt: t7.tag, updatedAt: t7.tag },
+      { id: nanoid(), name: 'sync', color: 'indigo', createdAt: t7.tag, updatedAt: t7.tag },
     ],
     codeBlocks: [],
     createdAt: t7.note,
     updatedAt: t7.note,
   });
 
-  // NOTE 8: Data & Export
+  // NOTE 8: Sync & Export
   const t8 = getTimestamps(7000);
   notes.push({
     id: nanoid(),
-    title: 'Data & Export',
+    title: 'Sync & Export',
     isSystemDoc: true,
+    folderId: DOCS_FOLDER_ID,
     content: {
       type: 'doc',
       content: [
         {
           type: 'heading',
           attrs: { level: 1 },
-          content: [{ type: 'text', text: 'Data & Export' }],
+          content: [{ type: 'text', text: 'Sync & Export' }],
         },
         {
           type: 'paragraph',
-          content: [{ type: 'text', text: 'Your notes are stored locally. Export or sync with your file system anytime.' }],
+          content: [{ type: 'text', text: 'Your notes are stored locally. Export or sync anytime.' }],
         },
         {
           type: 'heading',
@@ -613,7 +702,7 @@ export function createDefaultDocumentation(): Note[] {
           type: 'bulletList',
           content: [
             { type: 'listItem', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Notes save automatically as you type' }] }] },
-            { type: 'listItem', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Data stays in your browser\'s Local Storage' }] }] },
+            { type: 'listItem', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Data stays in your browser\'s storage' }] }] },
             { type: 'listItem', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Nothing leaves your device unless you export' }] }] },
           ],
         },
@@ -625,9 +714,9 @@ export function createDefaultDocumentation(): Note[] {
         {
           type: 'bulletList',
           content: [
-            { type: 'listItem', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Export current note: Download as Markdown (.md)' }] }] },
-            { type: 'listItem', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Export all notes: Download as JSON' }] }] },
-            { type: 'listItem', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Use exported files in other Markdown editors' }] }] },
+            { type: 'listItem', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Current note: Download as Markdown' }] }] },
+            { type: 'listItem', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'All notes: Download as JSON' }] }] },
+            { type: 'listItem', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Right-click note in sidebar for Copy as Markdown' }] }] },
           ],
         },
         {
@@ -640,170 +729,35 @@ export function createDefaultDocumentation(): Note[] {
           content: [
             { type: 'listItem', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Import Markdown files from other apps' }] }] },
             { type: 'listItem', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Drag and drop .md files into the app' }] }] },
+            { type: 'listItem', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Import JSON backup' }] }] },
           ],
         },
         {
           type: 'heading',
           attrs: { level: 2 },
-          content: [{ type: 'text', text: 'File System Sync' }],
+          content: [{ type: 'text', text: 'Install as App' }],
+        },
+        {
+          type: 'paragraph',
+          content: [{ type: 'text', text: 'Sandbooks works as a desktop app with offline support.' }],
         },
         {
           type: 'bulletList',
           content: [
-            { type: 'listItem', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Connect a folder to sync notes as Markdown files' }] }] },
-            { type: 'listItem', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Edit notes in VS Code or any Markdown editor' }] }] },
-            { type: 'listItem', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Use Git to version control your notes' }] }] },
-          ],
-        },
-        {
-          type: 'taskList',
-          content: [
-            { type: 'taskItem', attrs: { checked: false }, content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Check the export options in the sidebar' }] }] },
+            { type: 'listItem', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Chrome/Edge: Click the install icon (⊕) in the address bar' }] }] },
+            { type: 'listItem', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Safari: Share → Add to Dock' }] }] },
+            { type: 'listItem', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Offline: Edit notes without internet, code execution queued for later' }] }] },
           ],
         },
       ],
     },
     tags: [
-      { id: nanoid(), name: 'reference', color: 'purple', createdAt: t8.tag, updatedAt: t8.tag },
+      { id: nanoid(), name: 'export', color: 'indigo', createdAt: t8.tag, updatedAt: t8.tag },
+      { id: nanoid(), name: 'pwa', color: 'rose', createdAt: t8.tag, updatedAt: t8.tag },
     ],
     codeBlocks: [],
     createdAt: t8.note,
     updatedAt: t8.note,
-  });
-
-  // NOTE 9: Install as App (PWA)
-  const t9 = getTimestamps(8000);
-  notes.push({
-    id: nanoid(),
-    title: 'Install as App',
-    isSystemDoc: true,
-    content: {
-      type: 'doc',
-      content: [
-        {
-          type: 'heading',
-          attrs: { level: 1 },
-          content: [{ type: 'text', text: 'Install Sandbooks as an App' }],
-        },
-        {
-          type: 'paragraph',
-          content: [{ type: 'text', text: 'Sandbooks is a Progressive Web App (PWA). Install it on your desktop or mobile device for quick access, offline support, and a native app experience.' }],
-        },
-        {
-          type: 'heading',
-          attrs: { level: 2 },
-          content: [{ type: 'text', text: 'Why Install?' }],
-        },
-        {
-          type: 'bulletList',
-          content: [
-            { type: 'listItem', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Quick access from your desktop or home screen' }] }] },
-            { type: 'listItem', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Works offline - view and edit notes without internet' }] }] },
-            { type: 'listItem', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Native app experience with standalone window' }] }] },
-            { type: 'listItem', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Automatic updates keep you on the latest version' }] }] },
-          ],
-        },
-        {
-          type: 'heading',
-          attrs: { level: 2 },
-          content: [{ type: 'text', text: 'How to Install' }],
-        },
-        {
-          type: 'heading',
-          attrs: { level: 3 },
-          content: [{ type: 'text', text: 'Chrome, Edge, or Brave (Desktop)' }],
-        },
-        {
-          type: 'orderedList',
-          content: [
-            { type: 'listItem', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Look for the install icon (⊕) in your browser\'s address bar' }] }] },
-            { type: 'listItem', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Click the icon and select "Install"' }] }] },
-            { type: 'listItem', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Sandbooks will open in its own window' }] }] },
-          ],
-        },
-        {
-          type: 'heading',
-          attrs: { level: 3 },
-          content: [{ type: 'text', text: 'Safari (macOS)' }],
-        },
-        {
-          type: 'orderedList',
-          content: [
-            { type: 'listItem', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Click Share (⊞) in the Safari toolbar' }] }] },
-            { type: 'listItem', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Select "Add to Dock" or "Add to Home Screen"' }] }] },
-            { type: 'listItem', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Launch Sandbooks from your Dock or home screen' }] }] },
-          ],
-        },
-        {
-          type: 'heading',
-          attrs: { level: 3 },
-          content: [{ type: 'text', text: 'Firefox (Desktop)' }],
-        },
-        {
-          type: 'orderedList',
-          content: [
-            { type: 'listItem', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Click the menu (☰) in the top-right corner' }] }] },
-            { type: 'listItem', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Select "Install" or "Add to Home Screen"' }] }] },
-            { type: 'listItem', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Confirm the installation' }] }] },
-          ],
-        },
-        {
-          type: 'heading',
-          attrs: { level: 3 },
-          content: [{ type: 'text', text: 'Mobile Devices' }],
-        },
-        {
-          type: 'orderedList',
-          content: [
-            { type: 'listItem', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'iOS: Tap Share → "Add to Home Screen"' }] }] },
-            { type: 'listItem', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Android: Tap the menu (⋮) → "Install app" or "Add to Home screen"' }] }] },
-            { type: 'listItem', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Launch Sandbooks from your home screen like any app' }] }] },
-          ],
-        },
-        {
-          type: 'heading',
-          attrs: { level: 2 },
-          content: [{ type: 'text', text: 'Offline Features' }],
-        },
-        {
-          type: 'paragraph',
-          content: [{ type: 'text', text: 'Once installed, Sandbooks works offline:' }],
-        },
-        {
-          type: 'bulletList',
-          content: [
-            { type: 'listItem', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'View and edit all your notes without internet' }] }] },
-            { type: 'listItem', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Code execution requests are queued when offline' }] }] },
-            { type: 'listItem', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Queued executions run automatically when you\'re back online' }] }] },
-            { type: 'listItem', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'All data stays on your device' }] }] },
-          ],
-        },
-        {
-          type: 'heading',
-          attrs: { level: 2 },
-          content: [{ type: 'text', text: 'Updates' }],
-        },
-        {
-          type: 'paragraph',
-          content: [{ type: 'text', text: 'Sandbooks updates automatically. When a new version is available, you\'ll see a notification. Click "Reload" to get the latest features and improvements.' }],
-        },
-        {
-          type: 'taskList',
-          content: [
-            { type: 'taskItem', attrs: { checked: false }, content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Install Sandbooks on your device' }] }] },
-            { type: 'taskItem', attrs: { checked: false }, content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Try using Sandbooks offline' }] }] },
-            { type: 'taskItem', attrs: { checked: false }, content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Check for updates in the app' }] }] },
-          ],
-        },
-      ],
-    },
-    tags: [
-      { id: nanoid(), name: 'pwa', color: 'blue', createdAt: t9.tag, updatedAt: t9.tag },
-      { id: nanoid(), name: 'getting-started', color: 'green', createdAt: t9.tag, updatedAt: t9.tag },
-    ],
-    codeBlocks: [],
-    createdAt: t9.note,
-    updatedAt: t9.note,
   });
 
   return notes;

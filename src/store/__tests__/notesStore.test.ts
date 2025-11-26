@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { useNotesStore, createNewNote } from '../notesStore';
-import type { Note } from '../../types';
+import type { Note, Folder } from '../../types';
 import type { Tag } from '../../types/tags.types';
 import { cloudTerminalProvider } from '../../services/terminal/index';
 
@@ -65,6 +65,10 @@ vi.mock('../../utils/onboardingMetrics', () => ({
 }));
 
 vi.mock('../../utils/defaultDocumentation', () => ({
+  DOCS_VERSION: 1,
+  DOCS_UPDATED_AT: '2025-01-15',
+  DOCS_FOLDER_ID: 'sandbooks-docs-folder',
+  SYSTEM_DOC_TITLES: ['Welcome'],
   createDefaultDocumentation: vi.fn(() => [
     {
       id: 'doc-1',
@@ -74,8 +78,19 @@ vi.mock('../../utils/defaultDocumentation', () => ({
       codeBlocks: [],
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
+      isSystemDoc: true,
+      folderId: 'sandbooks-docs-folder',
     },
   ]),
+  createDefaultDocsFolder: vi.fn(() => ({
+    id: 'sandbooks-docs-folder',
+    name: 'Docs',
+    parentId: null,
+    color: 'blue',
+    sortOrder: 0,
+    createdAt: Date.now(),
+    updatedAt: Date.now(),
+  })),
 }));
 
 vi.mock('../../utils/fetchWithTimeout', () => ({
@@ -142,6 +157,43 @@ vi.mock('../../services/terminal/index', () => ({
     connectStream: vi.fn(),
     disconnectStream: vi.fn(),
   }
+}));
+
+vi.mock('../../services/github', () => ({
+  gitHubService: {
+    startOAuthFlow: vi.fn(() => Promise.resolve({ user: { id: 1, login: 'test', name: 'Test', avatarUrl: '' } })),
+    disconnect: vi.fn(() => Promise.resolve()),
+    listRepos: vi.fn(() => Promise.resolve([])),
+    selectRepo: vi.fn(() => Promise.resolve()),
+    push: vi.fn(() => Promise.resolve({ syncedAt: new Date().toISOString(), filesCreated: 1, filesUpdated: 0 })),
+    pull: vi.fn(() => Promise.resolve({ notes: [], folders: [], syncedAt: new Date().toISOString() })),
+    isConnected: vi.fn(() => true),
+    getStoredUser: vi.fn(() => null),
+    getStoredRepo: vi.fn(() => null),
+    getStoredPath: vi.fn(() => 'sandbooks'),
+    getLastSync: vi.fn(() => null),
+  },
+}));
+
+vi.mock('../../utils/folderUtils', () => ({
+  createFolder: vi.fn((name: string, parentId?: string) => ({
+    id: 'new-folder-id',
+    name,
+    parentId: parentId || null,
+    sortOrder: 0,
+    createdAt: Date.now(),
+    updatedAt: Date.now(),
+  })),
+  computeFolderPath: vi.fn(() => 'Root > Folder'),
+  buildFolderTree: vi.fn(() => []),
+  getNotesInFolder: vi.fn(() => []),
+  validateFolderMove: vi.fn(() => ({ valid: true })),
+  validateFolderDepth: vi.fn(() => true),
+  normalizeSortOrders: vi.fn((folders) => folders),
+  loadFoldersFromStorage: vi.fn(() => []),
+  saveFoldersToStorage: vi.fn(),
+  loadFolderUIState: vi.fn(() => ({ expandedFolderIds: [], activeFolderId: null, folderViewMode: 'tree' })),
+  saveFolderUIState: vi.fn(),
 }));
 
 describe('notesStore', () => {
@@ -940,6 +992,365 @@ describe('notesStore', () => {
       const info = useNotesStore.getState().getStorageInfo();
       expect(info).toBeDefined();
       expect(info.name).toBeDefined();
+    });
+  });
+
+  describe('payload methods', () => {
+    it('should load valid payload', async () => {
+      // Mock the payload decoding
+      vi.doMock('../../utils/payload', () => ({
+        decodePayload: vi.fn(() => ({
+          payloadNote: { v: 1, t: 'Test', n: [] },
+          metadata: { version: 1, createdAt: new Date(), updatedAt: new Date() },
+        })),
+        payloadToNote: vi.fn(() => ({
+          id: 'decoded-note',
+          title: 'Test',
+          content: { type: 'doc', content: [] },
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        })),
+        PayloadExpiredError: class extends Error {},
+        PayloadVersionError: class extends Error {},
+        PayloadDecodeError: class extends Error {},
+        getDecodeErrorMessage: vi.fn(() => 'Decode error'),
+      }));
+
+      await useNotesStore.getState().loadPayload('valid-token');
+
+      const state = useNotesStore.getState();
+      expect(state.isLoadingPayload).toBe(false);
+    });
+
+    it('should clear payload state', () => {
+      useNotesStore.setState({
+        payloadNote: { id: 'test', title: 'Test', content: { type: 'doc', content: [] }, createdAt: '', updatedAt: '' },
+        payloadMetadata: { version: 1, createdAt: new Date(), updatedAt: new Date(), tokenLength: 100, isExpired: false },
+        payloadError: { message: 'Error', type: 'unknown' },
+        isLoadingPayload: true,
+      });
+
+      useNotesStore.getState().clearPayload();
+
+      const state = useNotesStore.getState();
+      expect(state.payloadNote).toBeNull();
+      expect(state.payloadMetadata).toBeNull();
+      expect(state.payloadError).toBeNull();
+      expect(state.isLoadingPayload).toBe(false);
+    });
+
+    it('should save payload to notes', () => {
+      const payloadNote: Note = {
+        id: 'payload-id',
+        title: 'Payload Note',
+        content: { type: 'doc', content: [] },
+        tags: [],
+        codeBlocks: [],
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+
+      useNotesStore.setState({ payloadNote, notes: [] });
+
+      const savedNote = useNotesStore.getState().savePayloadToNotes();
+
+      expect(savedNote).not.toBeNull();
+      expect(savedNote?.title).toBe('Payload Note');
+      expect(savedNote?.id).not.toBe('payload-id'); // New ID generated
+      expect(useNotesStore.getState().payloadNote).toBeNull();
+    });
+
+    it('should return null when no payload to save', () => {
+      useNotesStore.setState({ payloadNote: null });
+
+      const result = useNotesStore.getState().savePayloadToNotes();
+
+      expect(result).toBeNull();
+    });
+  });
+
+  describe('share modal methods', () => {
+    it('should set share modal open', () => {
+      useNotesStore.getState().setShareModalOpen(true);
+      expect(useNotesStore.getState().isShareModalOpen).toBe(true);
+
+      useNotesStore.getState().setShareModalOpen(false);
+      expect(useNotesStore.getState().isShareModalOpen).toBe(false);
+    });
+  });
+
+  describe('docs version methods', () => {
+    it('should check docs version', () => {
+      localStorage.setItem('sandbooks-docs-version', '1');
+
+      useNotesStore.getState().checkDocsVersion();
+
+      expect(useNotesStore.getState().currentDocsVersion).toBe(1);
+    });
+
+    it('should detect docs update available', () => {
+      localStorage.setItem('sandbooks-docs-version', '0');
+      localStorage.removeItem('sandbooks-docs-update-dismissed');
+
+      useNotesStore.getState().checkDocsVersion();
+
+      expect(useNotesStore.getState().docsUpdateAvailable).toBe(true);
+    });
+
+    it('should respect current version when checking', () => {
+      // When current version matches DOCS_VERSION, no update needed
+      localStorage.setItem('sandbooks-docs-version', '1');
+
+      useNotesStore.getState().checkDocsVersion();
+
+      // docsUpdateAvailable depends on version comparison with DOCS_VERSION constant
+      expect(useNotesStore.getState().currentDocsVersion).toBe(1);
+    });
+
+    it('should dismiss docs update', () => {
+      useNotesStore.setState({ docsUpdateAvailable: true });
+
+      useNotesStore.getState().dismissDocsUpdate();
+
+      expect(useNotesStore.getState().docsUpdateAvailable).toBe(false);
+      expect(localStorage.getItem('sandbooks-docs-update-dismissed')).toBeDefined();
+    });
+
+    it('should update system docs', async () => {
+      const systemDoc: Note = {
+        id: 'system-1',
+        title: 'Welcome',
+        content: { type: 'doc', content: [] },
+        tags: [],
+        codeBlocks: [],
+        isSystemDoc: true,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+
+      const userNote: Note = {
+        id: 'user-1',
+        title: 'My Note',
+        content: { type: 'doc', content: [] },
+        tags: [],
+        codeBlocks: [],
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+
+      useNotesStore.setState({ notes: [systemDoc, userNote], currentDocsVersion: 0 });
+
+      useNotesStore.getState().updateSystemDocs();
+
+      const state = useNotesStore.getState();
+      expect(state.docsUpdateAvailable).toBe(false);
+      // User note should be preserved
+      expect(state.notes.some(n => n.title === 'My Note')).toBe(true);
+    });
+  });
+
+  describe('repo selector methods', () => {
+    it('should set repo selector open', () => {
+      useNotesStore.getState().setRepoSelectorOpen(true);
+      expect(useNotesStore.getState().isRepoSelectorOpen).toBe(true);
+
+      useNotesStore.getState().setRepoSelectorOpen(false);
+      expect(useNotesStore.getState().isRepoSelectorOpen).toBe(false);
+    });
+  });
+
+  describe('GitHub sync methods', () => {
+    it('should handle disconnect from GitHub', async () => {
+      useNotesStore.setState({
+        gitHubStatus: 'connected',
+        gitHubUser: { id: 1, login: 'test', name: 'Test', avatarUrl: '' },
+        gitHubRepo: 'user/repo',
+      });
+
+      await useNotesStore.getState().disconnectGitHub();
+
+      const state = useNotesStore.getState();
+      expect(state.gitHubStatus).toBe('disconnected');
+      expect(state.gitHubUser).toBeNull();
+      expect(state.gitHubRepo).toBeNull();
+    });
+
+    it('should reject push when not connected', async () => {
+      const { showToast } = await import('../../utils/toast');
+      useNotesStore.setState({ gitHubStatus: 'disconnected', gitHubRepo: null });
+
+      await useNotesStore.getState().pushToGitHub();
+
+      expect(vi.mocked(showToast.error)).toHaveBeenCalledWith(
+        expect.stringContaining('Not connected')
+      );
+    });
+
+    it('should reject pull when not connected', async () => {
+      const { showToast } = await import('../../utils/toast');
+      useNotesStore.setState({ gitHubStatus: 'disconnected', gitHubRepo: null });
+
+      await useNotesStore.getState().pullFromGitHub();
+
+      expect(vi.mocked(showToast.error)).toHaveBeenCalledWith(
+        expect.stringContaining('Not connected')
+      );
+    });
+
+    it('should reject select repo when not connected', async () => {
+      const { showToast } = await import('../../utils/toast');
+      useNotesStore.setState({ gitHubStatus: 'disconnected' });
+
+      await useNotesStore.getState().selectGitHubRepo('user/repo');
+
+      expect(vi.mocked(showToast.error)).toHaveBeenCalledWith(
+        expect.stringContaining('Not connected')
+      );
+    });
+  });
+
+  describe('folder methods', () => {
+    it('should create folder', () => {
+      useNotesStore.setState({ folders: [] });
+
+      const folder = useNotesStore.getState().createFolder('New Folder');
+
+      expect(folder).toBeDefined();
+      expect(folder.name).toBe('New Folder');
+      expect(useNotesStore.getState().folders).toContainEqual(expect.objectContaining({ name: 'New Folder' }));
+    });
+
+    it('should create folder with parent', () => {
+      const parentFolder: Folder = {
+        id: 'parent-1',
+        name: 'Parent',
+        parentId: null,
+        sortOrder: 0,
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+      };
+
+      useNotesStore.setState({ folders: [parentFolder] });
+
+      const childFolder = useNotesStore.getState().createFolder('Child', 'parent-1');
+
+      expect(childFolder.parentId).toBe('parent-1');
+    });
+
+    it('should update folder', () => {
+      const folder: Folder = {
+        id: 'folder-1',
+        name: 'Original',
+        parentId: null,
+        sortOrder: 0,
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+      };
+
+      useNotesStore.setState({ folders: [folder] });
+
+      useNotesStore.getState().updateFolder('folder-1', { name: 'Updated' });
+
+      const updatedFolder = useNotesStore.getState().folders.find(f => f.id === 'folder-1');
+      expect(updatedFolder?.name).toBe('Updated');
+    });
+
+    it('should delete folder', () => {
+      const folder: Folder = {
+        id: 'folder-1',
+        name: 'To Delete',
+        parentId: null,
+        sortOrder: 0,
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+      };
+
+      useNotesStore.setState({ folders: [folder] });
+
+      useNotesStore.getState().deleteFolder('folder-1');
+
+      expect(useNotesStore.getState().folders.find(f => f.id === 'folder-1')).toBeUndefined();
+    });
+
+    it('should toggle folder expanded', () => {
+      useNotesStore.setState({ expandedFolderIds: new Set(['folder-1']) });
+
+      // Collapse
+      useNotesStore.getState().toggleFolderExpanded('folder-1');
+      expect(useNotesStore.getState().expandedFolderIds.has('folder-1')).toBe(false);
+
+      // Expand
+      useNotesStore.getState().toggleFolderExpanded('folder-1');
+      expect(useNotesStore.getState().expandedFolderIds.has('folder-1')).toBe(true);
+    });
+
+    it('should set active folder', () => {
+      useNotesStore.getState().setActiveFolder('folder-123');
+      expect(useNotesStore.getState().activeFolderId).toBe('folder-123');
+    });
+
+    it('should move note to folder', () => {
+      const note: Note = {
+        id: 'note-1',
+        title: 'Test',
+        content: { type: 'doc', content: [] },
+        tags: [],
+        codeBlocks: [],
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+
+      useNotesStore.setState({ notes: [note] });
+
+      useNotesStore.getState().moveNoteToFolder('note-1', 'folder-1');
+
+      const updatedNote = useNotesStore.getState().notes.find(n => n.id === 'note-1');
+      expect(updatedNote?.folderId).toBe('folder-1');
+    });
+
+    it('should get notes in folder', () => {
+      const note1: Note = {
+        id: 'note-1',
+        title: 'In Folder',
+        content: { type: 'doc', content: [] },
+        folderId: 'folder-1',
+        tags: [],
+        codeBlocks: [],
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+
+      const note2: Note = {
+        id: 'note-2',
+        title: 'No Folder',
+        content: { type: 'doc', content: [] },
+        tags: [],
+        codeBlocks: [],
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+
+      useNotesStore.setState({ notes: [note1, note2] });
+
+      // The getNotesInFolder in store uses the folderUtils function which is mocked
+      // Just verify the method is callable and returns an array
+      const notesInFolder = useNotesStore.getState().getNotesInFolder('folder-1');
+      expect(Array.isArray(notesInFolder)).toBe(true);
+    });
+
+    it('should set folder view mode', () => {
+      useNotesStore.getState().setFolderViewMode('tree');
+      expect(useNotesStore.getState().folderViewMode).toBe('tree');
+
+      useNotesStore.getState().setFolderViewMode('flat');
+      expect(useNotesStore.getState().folderViewMode).toBe('flat');
+    });
+  });
+
+  describe('sync conflict methods', () => {
+    it('should set sync conflict modal open', () => {
+      useNotesStore.getState().setSyncConflictModalOpen(true);
+      expect(useNotesStore.getState().isSyncConflictModalOpen).toBe(true);
     });
   });
 });

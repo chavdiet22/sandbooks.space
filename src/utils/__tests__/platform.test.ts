@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, afterEach, beforeEach } from 'vitest';
-import { matchesShortcut, isMac, getModifierSymbol, formatShortcut } from '../platform';
+import { matchesShortcut, isMac, getModifierSymbol, formatShortcut, isMobile, isLocalExecutionSupported } from '../platform';
 
 describe('Platform Utilities', () => {
     const setPlatform = (platform: string) => {
@@ -54,6 +54,10 @@ describe('Platform Utilities', () => {
             expect(getModifierSymbol('alt')).toBe('Alt');
             expect(getModifierSymbol('shift')).toBe('Shift');
             expect(getModifierSymbol('ctrl')).toBe('Ctrl');
+        });
+
+        it('should return empty string for unknown modifier', () => {
+            expect(getModifierSymbol('unknown' as Parameters<typeof getModifierSymbol>[0])).toBe('');
         });
     });
 
@@ -127,6 +131,61 @@ describe('Platform Utilities', () => {
             // Simulate Option+N producing '˜' but code is 'KeyN'
             const event = mockEvent({ key: '˜', code: 'KeyN', altKey: true });
             expect(matchesShortcut(event, 'alt+n')).toBe(true);
+        });
+    });
+
+    describe('isMobile', () => {
+        const setUserAgent = (userAgent: string) => {
+            Object.defineProperty(window.navigator, 'userAgent', {
+                value: userAgent,
+                configurable: true,
+            });
+        };
+
+        it('returns false for desktop Chrome', () => {
+            setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36');
+            expect(isMobile()).toBe(false);
+        });
+
+        it('returns true for iPhone', () => {
+            setUserAgent('Mozilla/5.0 (iPhone; CPU iPhone OS 14_7_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.1.2 Mobile/15E148 Safari/604.1');
+            expect(isMobile()).toBe(true);
+        });
+
+        it('returns true for iPad', () => {
+            setUserAgent('Mozilla/5.0 (iPad; CPU OS 14_7_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.1.2 Mobile/15E148 Safari/604.1');
+            expect(isMobile()).toBe(true);
+        });
+
+        it('returns true for Android', () => {
+            setUserAgent('Mozilla/5.0 (Linux; Android 11; SM-G991B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.120 Mobile Safari/537.36');
+            expect(isMobile()).toBe(true);
+        });
+
+        it('returns false for desktop Firefox', () => {
+            setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:89.0) Gecko/20100101 Firefox/89.0');
+            expect(isMobile()).toBe(false);
+        });
+    });
+
+    describe('isLocalExecutionSupported', () => {
+        const setUserAgent = (userAgent: string) => {
+            Object.defineProperty(window.navigator, 'userAgent', {
+                value: userAgent,
+                configurable: true,
+            });
+        };
+
+        it('returns true for desktop browser', async () => {
+            setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36');
+            const result = await isLocalExecutionSupported();
+            expect(result).toBe(true);
+        });
+
+        it('returns false for mobile browser', async () => {
+            setUserAgent('Mozilla/5.0 (iPhone; CPU iPhone OS 14_7_1 like Mac OS X) AppleWebKit/605.1.15');
+            const result = await isLocalExecutionSupported();
+            expect(result).toBe(false);
         });
     });
 });

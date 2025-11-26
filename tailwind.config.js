@@ -118,7 +118,7 @@ module.exports = {
         '300': '300ms',
       },
       transitionTimingFunction: {
-        // Fluid interface curves
+        // Spring curves
         'spring': 'cubic-bezier(0.34, 1.56, 0.64, 1)',      // Gentle bounce - feels organic
         'spring-snappy': 'cubic-bezier(0.5, 1.8, 0.9, 0.8)', // Pronounced bounce
         'smooth': 'cubic-bezier(0.25, 0.46, 0.45, 0.94)',   // Smooth deceleration

@@ -422,5 +422,141 @@ describe('markdownSerializer', () => {
             const result = serializeToMarkdown(content);
             expect(result).toContain('# Heading');
         });
+
+        it('should handle strike mark', () => {
+            const content: JSONContent = {
+                type: 'doc',
+                content: [
+                    {
+                        type: 'paragraph',
+                        content: [
+                            {
+                                type: 'text',
+                                text: 'Strikethrough',
+                                marks: [{ type: 'strike' }]
+                            }
+                        ]
+                    }
+                ]
+            };
+            const result = serializeToMarkdown(content);
+            expect(result).toBe('~~Strikethrough~~');
+        });
+
+        it('should handle unknown inline node types', () => {
+            const content: JSONContent = {
+                type: 'doc',
+                content: [
+                    {
+                        type: 'paragraph',
+                        content: [
+                            {
+                                type: 'unknownInlineType',
+                                attrs: { data: 'test' }
+                            }
+                        ]
+                    }
+                ]
+            };
+            const result = serializeToMarkdown(content);
+            // Unknown inline types should return empty string
+            expect(result).toBe('');
+        });
+
+        it('should handle executable code blocks', () => {
+            const content: JSONContent = {
+                type: 'doc',
+                content: [
+                    {
+                        type: 'executableCodeBlock',
+                        attrs: { language: 'python', code: 'print("hello")' }
+                    }
+                ]
+            };
+            const result = serializeToMarkdown(content);
+            expect(result).toBe('```python\nprint("hello")\n```');
+        });
+
+        it('should handle executable code blocks without language', () => {
+            const content: JSONContent = {
+                type: 'doc',
+                content: [
+                    {
+                        type: 'executableCodeBlock',
+                        attrs: { code: 'console.log("hi")' }
+                    }
+                ]
+            };
+            const result = serializeToMarkdown(content);
+            expect(result).toBe('```\nconsole.log("hi")\n```');
+        });
+
+        it('should handle link without href', () => {
+            const content: JSONContent = {
+                type: 'doc',
+                content: [
+                    {
+                        type: 'paragraph',
+                        content: [
+                            {
+                                type: 'text',
+                                text: 'Link',
+                                marks: [{ type: 'link', attrs: {} }]
+                            }
+                        ]
+                    }
+                ]
+            };
+            const result = serializeToMarkdown(content);
+            expect(result).toBe('[Link]()');
+        });
+
+        it('should handle hardBreak node type', () => {
+            const content: JSONContent = {
+                type: 'doc',
+                content: [
+                    {
+                        type: 'hardBreak'
+                    }
+                ]
+            };
+            const result = serializeToMarkdown(content);
+            expect(result).toBe('  \n');
+        });
+
+        it('should handle unknown node types with content', () => {
+            const content: JSONContent = {
+                type: 'doc',
+                content: [
+                    {
+                        type: 'unknownType',
+                        content: [
+                            { type: 'paragraph', content: [{ type: 'text', text: 'nested' }] }
+                        ]
+                    }
+                ]
+            };
+            const result = serializeToMarkdown(content);
+            expect(result).toContain('nested');
+        });
+
+        it('should handle image without src', () => {
+            const content: JSONContent = {
+                type: 'doc',
+                content: [
+                    {
+                        type: 'paragraph',
+                        content: [
+                            {
+                                type: 'image',
+                                attrs: {}
+                            }
+                        ]
+                    }
+                ]
+            };
+            const result = serializeToMarkdown(content);
+            expect(result).toBe('![]()');
+        });
     });
 });

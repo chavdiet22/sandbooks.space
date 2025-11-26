@@ -1,7 +1,7 @@
 import type { Variants, Transition } from 'framer-motion';
 
 // =================================================================
-// SPRING PRESETS (Fluid Interface Guidelines)
+// SPRING PRESETS
 // =================================================================
 
 /**
@@ -440,7 +440,7 @@ export const executionCountVariants: Variants = {
 
 /**
  * Enhanced execution states with research-backed animations.
- * Success: 1.5% scale pulse (Apple HIG - subtle but perceptible)
+ * Success: 1.5% scale pulse (subtle but perceptible)
  * Error: 2px shake (draws attention without alarming)
  */
 export const enhancedExecutionVariants: Variants = {

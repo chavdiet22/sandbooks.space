@@ -9,7 +9,13 @@ import { storageManager, storageService } from '../services/storageManager';
 import { extractTitleFromContent } from '../utils/titleExtraction';
 import { getNextTagColor } from '../utils/tagColors';
 import { showToast as toast } from '../utils/toast';
-import { createDefaultDocumentation, DOCS_VERSION, SYSTEM_DOC_TITLES } from '../utils/defaultDocumentation';
+import {
+  createDefaultDocumentation,
+  createDefaultDocsFolder,
+  DOCS_VERSION,
+  DOCS_FOLDER_ID,
+  SYSTEM_DOC_TITLES,
+} from '../utils/defaultDocumentation';
 import { recordOnboardingEvent, clearOnboardingEvents } from '../utils/onboardingMetrics';
 import { fetchWithTimeout } from '../utils/fetchWithTimeout';
 import { cloudTerminalProvider } from '../services/terminal/index';
@@ -36,6 +42,7 @@ import {
   loadFolderUIState,
   saveFolderUIState,
 } from '../utils/folderUtils';
+import { toTimestampMs, toISOString } from '../utils/dateUtils';
 
 // Initialize dark mode from localStorage or system preference
 const initDarkMode = (): boolean => {
@@ -309,13 +316,23 @@ export const useNotesStore = create<NotesStore>((set, get) => ({
 
   resetOnboardingDocs: (options) => {
     const docs = createDefaultDocumentation();
+    const docsFolder = createDefaultDocsFolder();
+
+    // Merge docs folder with existing folders (or create if none)
+    const existingFolders = get().folders;
+    const hasDocsFolder = existingFolders.some((f) => f.id === DOCS_FOLDER_ID);
+    const newFolders = hasDocsFolder ? existingFolders : [docsFolder, ...existingFolders];
+
     storageService.saveAllNotes(docs);
+    saveFoldersToStorage(newFolders);
     localStorage.setItem('sandbooks-first-run-complete', 'true');
     clearOnboardingEvents();
     set({
       notes: docs,
       activeNoteId: docs[0]?.id ?? null,
       tags: deriveTagsFromNotes(docs),
+      folders: newFolders,
+      expandedFolderIds: new Set([DOCS_FOLDER_ID]),
     });
     recordOnboardingEvent('docs_reset', {
       source: options?.source ?? 'manual',
@@ -329,13 +346,24 @@ export const useNotesStore = create<NotesStore>((set, get) => ({
   seedDocsIfMissing: () => {
     const currentNotes = get().notes;
     if (currentNotes.length > 0) return;
+
     const docs = createDefaultDocumentation();
+    const docsFolder = createDefaultDocsFolder();
+
+    // Add docs folder if it doesn't exist
+    const existingFolders = get().folders;
+    const hasDocsFolder = existingFolders.some((f) => f.id === DOCS_FOLDER_ID);
+    const newFolders = hasDocsFolder ? existingFolders : [docsFolder, ...existingFolders];
+
     storageService.saveAllNotes(docs);
+    saveFoldersToStorage(newFolders);
     localStorage.setItem('sandbooks-first-run-complete', 'true');
     set({
       notes: docs,
       activeNoteId: docs[0]?.id ?? null,
       tags: deriveTagsFromNotes(docs),
+      folders: newFolders,
+      expandedFolderIds: new Set([DOCS_FOLDER_ID]),
     });
     recordOnboardingEvent('docs_reset', { source: 'auto-empty', notesCount: docs.length });
   },
@@ -1198,7 +1226,7 @@ export const useNotesStore = create<NotesStore>((set, get) => ({
 
   updateSystemDocs: () => {
     const state = get();
-    const { notes } = state;
+    const { notes, folders } = state;
 
     // Identify system docs (by isSystemDoc flag or well-known titles)
     const isSystemDoc = (note: Note): boolean => {
@@ -1212,12 +1240,20 @@ export const useNotesStore = create<NotesStore>((set, get) => ({
 
     // Create fresh system docs
     const newSystemDocs = createDefaultDocumentation();
+    const docsFolder = createDefaultDocsFolder();
 
     // Merge: new system docs first, then user notes
     const mergedNotes = [...newSystemDocs, ...userNotes];
 
+    // Ensure Docs folder exists
+    const hasDocsFolder = folders.some((f) => f.id === DOCS_FOLDER_ID);
+    const newFolders = hasDocsFolder ? folders : [docsFolder, ...folders];
+
     // Save to storage
     storageService.saveAllNotes(mergedNotes);
+    if (!hasDocsFolder) {
+      saveFoldersToStorage(newFolders);
+    }
 
     // Update localStorage version
     localStorage.setItem('sandbooks-docs-version', String(DOCS_VERSION));
@@ -1229,6 +1265,8 @@ export const useNotesStore = create<NotesStore>((set, get) => ({
       activeNoteId: mergedNotes[0]?.id ?? null,
       docsUpdateAvailable: false,
       currentDocsVersion: DOCS_VERSION,
+      folders: newFolders,
+      expandedFolderIds: new Set([...state.expandedFolderIds, DOCS_FOLDER_ID]),
     });
 
     recordOnboardingEvent('docs_updated', {
@@ -1340,8 +1378,8 @@ export const useNotesStore = create<NotesStore>((set, get) => ({
         sortOrder: f.sortOrder,
         color: f.color,
         icon: f.icon,
-        createdAt: new Date(f.createdAt).toISOString(),
-        updatedAt: new Date(f.updatedAt).toISOString(),
+        createdAt: toISOString(f.createdAt),
+        updatedAt: toISOString(f.updatedAt),
       }));
 
       // Get deleted folder IDs from storage
@@ -1415,12 +1453,8 @@ export const useNotesStore = create<NotesStore>((set, get) => ({
               sortOrder: remoteFolder.sortOrder,
               color: remoteFolder.color as FolderColor | undefined,
               icon: remoteFolder.icon,
-              createdAt: remoteFolder.createdAt
-                ? new Date(remoteFolder.createdAt).getTime()
-                : Date.now(),
-              updatedAt: remoteFolder.updatedAt
-                ? new Date(remoteFolder.updatedAt).getTime()
-                : Date.now(),
+              createdAt: toTimestampMs(remoteFolder.createdAt),
+              updatedAt: toTimestampMs(remoteFolder.updatedAt),
             });
           }
         }
@@ -1496,12 +1530,8 @@ export const useNotesStore = create<NotesStore>((set, get) => ({
         sortOrder: f.sortOrder,
         color: f.color as FolderColor | undefined,
         icon: f.icon,
-        createdAt: f.createdAt
-          ? new Date(f.createdAt).getTime()
-          : Date.now(),
-        updatedAt: f.updatedAt
-          ? new Date(f.updatedAt).getTime()
-          : Date.now(),
+        createdAt: toTimestampMs(f.createdAt),
+        updatedAt: toTimestampMs(f.updatedAt),
       }));
     };
 
@@ -1513,8 +1543,8 @@ export const useNotesStore = create<NotesStore>((set, get) => ({
       sortOrder: f.sortOrder,
       color: f.color,
       icon: f.icon,
-      createdAt: new Date(f.createdAt).toISOString(),
-      updatedAt: new Date(f.updatedAt).toISOString(),
+      createdAt: toISOString(f.createdAt),
+      updatedAt: toISOString(f.updatedAt),
     }));
 
     try {
@@ -1566,8 +1596,8 @@ export const useNotesStore = create<NotesStore>((set, get) => ({
           sortOrder: f.sortOrder,
           color: f.color,
           icon: f.icon,
-          createdAt: new Date(f.createdAt).toISOString(),
-          updatedAt: new Date(f.updatedAt).toISOString(),
+          createdAt: toISOString(f.createdAt),
+          updatedAt: toISOString(f.updatedAt),
         }));
 
         // Push merged notes and folders
@@ -1698,7 +1728,10 @@ export const createNewNote = (): Note => ({
   // Check if this is first launch
   if (notes.length === 0 && localStorage.getItem('sandbooks-first-run-complete') !== 'true') {
     const docNotes = createDefaultDocumentation();
+    const docsFolder = createDefaultDocsFolder();
+
     await storageManager.saveAllNotes(docNotes);
+    saveFoldersToStorage([docsFolder]);
     localStorage.setItem('sandbooks-first-run-complete', 'true');
     // Set initial docs version for new users
     localStorage.setItem('sandbooks-docs-version', String(DOCS_VERSION));
@@ -1708,6 +1741,8 @@ export const createNewNote = (): Note => ({
       tags: deriveTagsFromNotes(docNotes),
       activeNoteId: docNotes[0]?.id || null,
       currentDocsVersion: DOCS_VERSION,
+      folders: [docsFolder],
+      expandedFolderIds: new Set([DOCS_FOLDER_ID]),
     });
   } else if (notes.length > 0) {
     useNotesStore.setState({

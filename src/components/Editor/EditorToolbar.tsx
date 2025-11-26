@@ -163,7 +163,7 @@ export const EditorToolbar = ({ editor, onAddImage, onLinkClick }: EditorToolbar
                     <div className="flex items-center gap-0.5">
                         <ToolbarButton
                             isActive={editor.isActive('bold')}
-                            onClick={() => editor.chain().focus().toggleBold().run()}
+                            onClick={() => editor.commands.toggleBold()}
                             icon={LuBold}
                             tooltip="Bold"
                             shortcut="⌘B"
@@ -171,7 +171,7 @@ export const EditorToolbar = ({ editor, onAddImage, onLinkClick }: EditorToolbar
                         />
                         <ToolbarButton
                             isActive={editor.isActive('italic')}
-                            onClick={() => editor.chain().focus().toggleItalic().run()}
+                            onClick={() => editor.commands.toggleItalic()}
                             icon={LuItalic}
                             tooltip="Italic"
                             shortcut="⌘I"
@@ -230,14 +230,14 @@ export const EditorToolbar = ({ editor, onAddImage, onLinkClick }: EditorToolbar
                         <div className="flex items-center gap-0.5 overflow-x-auto no-scrollbar py-0.5">
                             <ToolbarButton
                                 isActive={editor.isActive('strike')}
-                                onClick={() => editor.chain().focus().toggleStrike().run()}
+                                onClick={() => editor.commands.toggleStrike()}
                                 icon={LuStrikethrough}
                                 tooltip="Strikethrough"
                                 ariaLabel="Strikethrough"
                             />
                             <ToolbarButton
                                 isActive={editor.isActive('underline')}
-                                onClick={() => editor.chain().focus().toggleUnderline().run()}
+                                onClick={() => editor.commands.toggleUnderline()}
                                 icon={LuUnderline}
                                 tooltip="Underline"
                                 shortcut="⌘U"
@@ -245,7 +245,7 @@ export const EditorToolbar = ({ editor, onAddImage, onLinkClick }: EditorToolbar
                             />
                             <ToolbarButton
                                 isActive={editor.isActive('highlight')}
-                                onClick={() => editor.chain().focus().toggleHighlight().run()}
+                                onClick={() => editor.commands.toggleHighlight()}
                                 icon={LuHighlighter}
                                 tooltip="Highlight"
                                 ariaLabel="Highlight"
@@ -265,14 +265,14 @@ export const EditorToolbar = ({ editor, onAddImage, onLinkClick }: EditorToolbar
                             </Tooltip>
                             <ToolbarButton
                                 isActive={editor.isActive('superscript')}
-                                onClick={() => editor.chain().focus().toggleSuperscript().run()}
+                                onClick={() => editor.commands.toggleSuperscript()}
                                 icon={LuSuperscript}
                                 tooltip="Superscript"
                                 ariaLabel="Superscript"
                             />
                             <ToolbarButton
                                 isActive={editor.isActive('subscript')}
-                                onClick={() => editor.chain().focus().toggleSubscript().run()}
+                                onClick={() => editor.commands.toggleSubscript()}
                                 icon={LuSubscript}
                                 tooltip="Subscript"
                                 ariaLabel="Subscript"
@@ -366,7 +366,7 @@ export const EditorToolbar = ({ editor, onAddImage, onLinkClick }: EditorToolbar
                     {/* Text Formatting */}
                     <ToolbarButton
                         isActive={editor.isActive('bold')}
-                        onClick={() => editor.chain().focus().toggleBold().run()}
+                        onClick={() => editor.commands.toggleBold()}
                         icon={LuBold}
                         tooltip="Bold"
                         shortcut="⌘B"
@@ -374,7 +374,7 @@ export const EditorToolbar = ({ editor, onAddImage, onLinkClick }: EditorToolbar
                     />
                     <ToolbarButton
                         isActive={editor.isActive('italic')}
-                        onClick={() => editor.chain().focus().toggleItalic().run()}
+                        onClick={() => editor.commands.toggleItalic()}
                         icon={LuItalic}
                         tooltip="Italic"
                         shortcut="⌘I"
@@ -382,14 +382,14 @@ export const EditorToolbar = ({ editor, onAddImage, onLinkClick }: EditorToolbar
                     />
                     <ToolbarButton
                         isActive={editor.isActive('strike')}
-                        onClick={() => editor.chain().focus().toggleStrike().run()}
+                        onClick={() => editor.commands.toggleStrike()}
                         icon={LuStrikethrough}
                         tooltip="Strikethrough"
                         ariaLabel="Strikethrough"
                     />
                     <ToolbarButton
                         isActive={editor.isActive('underline')}
-                        onClick={() => editor.chain().focus().toggleUnderline().run()}
+                        onClick={() => editor.commands.toggleUnderline()}
                         icon={LuUnderline}
                         tooltip="Underline"
                         shortcut="⌘U"
@@ -397,7 +397,7 @@ export const EditorToolbar = ({ editor, onAddImage, onLinkClick }: EditorToolbar
                     />
                     <ToolbarButton
                         isActive={editor.isActive('highlight')}
-                        onClick={() => editor.chain().focus().toggleHighlight().run()}
+                        onClick={() => editor.commands.toggleHighlight()}
                         icon={LuHighlighter}
                         tooltip="Highlight"
                         ariaLabel="Highlight"
@@ -420,7 +420,7 @@ export const EditorToolbar = ({ editor, onAddImage, onLinkClick }: EditorToolbar
                     </Tooltip>
                     <ToolbarButton
                         isActive={editor.isActive('superscript')}
-                        onClick={() => editor.chain().focus().toggleSuperscript().run()}
+                        onClick={() => editor.commands.toggleSuperscript()}
                         icon={LuSuperscript}
                         tooltip="Superscript"
                         shortcut="⌘⇧="
@@ -428,7 +428,7 @@ export const EditorToolbar = ({ editor, onAddImage, onLinkClick }: EditorToolbar
                     />
                     <ToolbarButton
                         isActive={editor.isActive('subscript')}
-                        onClick={() => editor.chain().focus().toggleSubscript().run()}
+                        onClick={() => editor.commands.toggleSubscript()}
                         icon={LuSubscript}
                         tooltip="Subscript"
                         shortcut="⌘⇧-"

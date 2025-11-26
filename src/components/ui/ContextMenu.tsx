@@ -40,6 +40,9 @@ interface MenuPosition {
  *   <div>Right-click me</div>
  * </ContextMenu>
  */
+// Long-press duration for mobile touch (ms)
+const LONG_PRESS_DURATION = 500;
+
 export const ContextMenu: React.FC<ContextMenuProps> = ({ items, children, className }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [position, setPosition] = useState<MenuPosition>({ x: 0, y: 0 });
@@ -49,10 +52,23 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({ items, children, class
   const containerRef = useRef<HTMLDivElement>(null);
   const itemRefs = useRef<(HTMLButtonElement | null)[]>([]);
 
+  // Touch handling refs
+  const longPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const touchStartPosRef = useRef<{ x: number; y: number } | null>(null);
+
   // Keep ref in sync with state
   useEffect(() => {
     focusedIndexRef.current = focusedIndex;
   }, [focusedIndex]);
+
+  // Cleanup timer on unmount
+  useEffect(() => {
+    return () => {
+      if (longPressTimerRef.current) {
+        clearTimeout(longPressTimerRef.current);
+      }
+    };
+  }, []);
 
   const closeMenu = useCallback(() => {
     if (isOpen) {
@@ -61,16 +77,57 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({ items, children, class
     }
   }, [isOpen]);
 
+  const openMenuAt = useCallback((x: number, y: number) => {
+    setPosition({ x, y });
+    setIsOpen(true);
+  }, []);
+
   const handleContextMenu = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    openMenuAt(e.clientX, e.clientY);
+  }, [openMenuAt]);
 
-    // Calculate position, ensuring menu stays in viewport
-    const x = e.clientX;
-    const y = e.clientY;
+  // Touch handlers for mobile long-press support
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    if (e.touches.length !== 1) return; // Only handle single touch
 
-    setPosition({ x, y });
-    setIsOpen(true);
+    const touch = e.touches[0];
+    touchStartPosRef.current = { x: touch.clientX, y: touch.clientY };
+
+    // Start long-press timer
+    longPressTimerRef.current = setTimeout(() => {
+      if (touchStartPosRef.current) {
+        openMenuAt(touchStartPosRef.current.x, touchStartPosRef.current.y);
+        touchStartPosRef.current = null;
+      }
+    }, LONG_PRESS_DURATION);
+  }, [openMenuAt]);
+
+  const handleTouchMove = useCallback((e: React.TouchEvent) => {
+    if (!touchStartPosRef.current || e.touches.length !== 1) return;
+
+    const touch = e.touches[0];
+    const dx = Math.abs(touch.clientX - touchStartPosRef.current.x);
+    const dy = Math.abs(touch.clientY - touchStartPosRef.current.y);
+
+    // Cancel long-press if finger moves more than 10px (user is scrolling)
+    if (dx > 10 || dy > 10) {
+      if (longPressTimerRef.current) {
+        clearTimeout(longPressTimerRef.current);
+        longPressTimerRef.current = null;
+      }
+      touchStartPosRef.current = null;
+    }
+  }, []);
+
+  const handleTouchEnd = useCallback(() => {
+    // Cancel long-press timer on touch end
+    if (longPressTimerRef.current) {
+      clearTimeout(longPressTimerRef.current);
+      longPressTimerRef.current = null;
+    }
+    touchStartPosRef.current = null;
   }, []);
 
   const handleItemClick = useCallback((item: ContextMenuItem) => {
@@ -201,6 +258,10 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({ items, children, class
       <div
         ref={containerRef}
         onContextMenu={handleContextMenu}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+        onTouchCancel={handleTouchEnd}
         className={className}
       >
         {children}

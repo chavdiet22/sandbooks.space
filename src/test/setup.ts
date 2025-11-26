@@ -1,6 +1,12 @@
-import { afterEach, vi } from 'vitest';
+import { afterEach, afterAll, beforeAll, vi, expect } from 'vitest';
 import { cleanup, configure } from '@testing-library/react';
 import '@testing-library/jest-dom';
+import * as matchers from 'vitest-axe/matchers';
+import { setupServer } from 'msw/node';
+import { handlers } from './mocks/handlers';
+
+// Extend Vitest matchers with axe accessibility matchers
+expect.extend(matchers);
 
 // Configure React Testing Library to suppress act() warnings
 configure({
@@ -9,15 +15,32 @@ configure({
   asyncUtilTimeout: 5000,
 });
 
-// Cleanup after each test
+// Setup MSW server for API mocking
+export const server = setupServer(...handlers);
+
+// Start MSW server before all tests
+beforeAll(() => {
+  server.listen({
+    onUnhandledRequest: 'warn', // Warn about unhandled requests
+  });
+});
+
+// Reset handlers after each test to ensure test isolation
 afterEach(() => {
+  server.resetHandlers();
   cleanup();
+});
+
+// Close server after all tests
+afterAll(() => {
+  server.close();
 });
 
 // Suppress expected console output in tests
 const originalError = console.error;
 const originalWarn = console.warn;
 const originalLog = console.log;
+const originalDebug = console.debug;
 
 // Suppress expected error logs from error handling paths
 console.error = vi.fn((...args) => {
@@ -34,8 +57,11 @@ console.error = vi.fn((...args) => {
     'Failed to connect to local folder',
     'Failed to restore offline queue',
     'Service Worker registration error',
+    '[TerminalService]',
+    '[Terminal]',
+    'Typewriter mode scroll error',
   ];
-  
+
   if (expectedErrors.some(err => message.includes(err))) {
     // Suppress expected errors
     return;
@@ -49,7 +75,10 @@ console.warn = vi.fn((...args) => {
   const message = String(args[0] || '');
   if (message.includes('not found for queued execution') ||
       message.includes('not configured to support act') ||
-      message.includes('The current testing environment is not configured to support act')) {
+      message.includes('The current testing environment is not configured to support act') ||
+      message.includes('No quirks-mode-compatible') ||
+      message.includes('KaTeX') ||
+      message.includes('[ContentSanitizer]')) {
     return;
   }
   originalWarn(...args);
@@ -66,13 +95,25 @@ if (typeof process !== 'undefined' && process.stderr) {
   };
 }
 
-// Suppress PWA debug logs
+// Suppress PWA and TerminalService debug logs
 console.log = vi.fn((...args) => {
   const message = String(args[0] || '');
-  if (message.includes('[PWA]')) {
+  if (message.includes('[PWA]') ||
+      message.includes('[TerminalService]') ||
+      message.includes('[Terminal]') ||
+      message.includes('Typewriter mode scroll error')) {
     return;
   }
   originalLog(...args);
+});
+
+// Suppress debug logs
+console.debug = vi.fn((...args) => {
+  const message = String(args[0] || '');
+  if (message.includes('Typewriter mode scroll error')) {
+    return;
+  }
+  originalDebug(...args);
 });
 
 // Mock localStorage
@@ -109,4 +150,31 @@ Object.defineProperty(window, 'matchMedia', {
     removeEventListener: vi.fn(),
     dispatchEvent: vi.fn(),
   })),
+});
+
+// Mock ResizeObserver (needed for some components)
+class MockResizeObserver {
+  observe = vi.fn();
+  unobserve = vi.fn();
+  disconnect = vi.fn();
+}
+
+Object.defineProperty(window, 'ResizeObserver', {
+  writable: true,
+  value: MockResizeObserver,
+});
+
+// Mock IntersectionObserver (needed for virtualized lists)
+class MockIntersectionObserver {
+  observe = vi.fn();
+  unobserve = vi.fn();
+  disconnect = vi.fn();
+  root = null;
+  rootMargin = '';
+  thresholds = [];
+}
+
+Object.defineProperty(window, 'IntersectionObserver', {
+  writable: true,
+  value: MockIntersectionObserver,
 });

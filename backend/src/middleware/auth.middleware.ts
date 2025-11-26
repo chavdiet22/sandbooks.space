@@ -36,14 +36,37 @@ export const authGuard = (req: Request, res: Response, next: NextFunction) => {
   const tokenHeader = req.headers['x-sandbooks-token'];
   const queryToken = typeof req.query.token === 'string' ? req.query.token : undefined;
 
+  // Check Bearer format
+  if (bearerHeader && !bearerHeader.startsWith('Bearer ')) {
+    return res.status(401).json({
+      error: 'Invalid authorization format',
+      message: 'Authorization header must use Bearer scheme: "Bearer <token>"',
+      code: 'INVALID_AUTH_FORMAT'
+    });
+  }
+
   const providedToken = bearerHeader?.startsWith('Bearer ')
     ? bearerHeader.slice(7)
     : Array.isArray(tokenHeader)
       ? tokenHeader[0]
       : tokenHeader || queryToken;
 
+  // No token provided
+  if (!providedToken) {
+    return res.status(401).json({
+      error: 'Authentication required',
+      message: 'API token is required. Provide via Authorization header (Bearer <token>), x-sandbooks-token header, or token query parameter.',
+      code: 'MISSING_TOKEN'
+    });
+  }
+
+  // Token provided but invalid
   if (providedToken !== env.API_ACCESS_TOKEN) {
-    return res.status(401).json({ error: 'Unauthorized: invalid or missing API token' });
+    return res.status(401).json({
+      error: 'Invalid API token',
+      message: 'The provided API token is not valid. Check your configuration.',
+      code: 'INVALID_TOKEN'
+    });
   }
 
   return next();

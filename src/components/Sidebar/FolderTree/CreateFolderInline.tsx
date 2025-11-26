@@ -17,6 +17,8 @@ export const CreateFolderInline: React.FC<CreateFolderInlineProps> = ({
 }) => {
   const [name, setName] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
+  // Guard to prevent multiple submissions from Enter + blur + click
+  const hasSubmittedRef = useRef(false);
 
   // Focus input on mount
   useEffect(() => {
@@ -25,6 +27,10 @@ export const CreateFolderInline: React.FC<CreateFolderInlineProps> = ({
   }, []);
 
   const handleSubmit = useCallback(() => {
+    // Prevent multiple submissions
+    if (hasSubmittedRef.current) return;
+    hasSubmittedRef.current = true;
+
     const trimmedName = name.trim();
     if (trimmedName) {
       onConfirm(trimmedName);

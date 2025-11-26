@@ -50,6 +50,7 @@ import { LinkPopover } from './LinkPopover';
 import { BubbleMenu } from './BubbleMenu';
 import { FloatingMenu } from './FloatingMenu';
 import { EditorToolbar } from './EditorToolbar';
+import { EditorContextMenu } from './EditorContextMenu';
 
 interface EditorProps {
   note: Note;
@@ -210,10 +211,25 @@ export const Editor = ({ note, onUpdate, readOnly = false }: EditorProps) => {
 
       // Only update if content actually changed to avoid cursor jumping (optimized with fast-deep-equal)
       if (!equal(currentContent, sanitizedContent)) {
-        editor.commands.setContent(sanitizedContent);
+        try {
+          editor.commands.setContent(sanitizedContent);
+        } catch (error) {
+          console.error('[Editor] Failed to set content, recovering with empty document:', {
+            error,
+            noteId: note.id,
+            noteTitle: note.title,
+          });
+          // Recover with empty document to prevent crash
+          try {
+            editor.commands.setContent({ type: 'doc', content: [{ type: 'paragraph' }] });
+          } catch (recoveryError) {
+            console.error('[Editor] Recovery also failed, clearing content:', recoveryError);
+            editor.commands.clearContent();
+          }
+        }
       }
     }
-  }, [editor, note.id, sanitizedContent]); // Re-run when note changes OR editor instance changes
+  }, [editor, note.id, note.title, sanitizedContent]); // Re-run when note changes OR editor instance changes
 
   // Reset scroll position when switching notes
   // This prevents stale scroll positions from persisting across note changes
@@ -445,6 +461,7 @@ export const Editor = ({ note, onUpdate, readOnly = false }: EditorProps) => {
           <EditorContent editor={editor} />
           {editor && <BubbleMenu editor={editor} />}
           {editor && <FloatingMenu editor={editor} />}
+          {editor && <EditorContextMenu editor={editor} />}
           {editor && (
             <DragHandle editor={editor} className="drag-handle-wrapper">
               <div className="flex flex-col gap-0.5 p-1.5 rounded-md bg-stone-300 dark:bg-stone-600 hover:bg-stone-400 dark:hover:bg-stone-500 cursor-grab active:cursor-grabbing shadow-sm">

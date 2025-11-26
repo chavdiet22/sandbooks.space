@@ -70,12 +70,10 @@ export const slashCommandItems: SlashCommandItem[] = [
     searchTerms: ['bullet', 'ul', 'unordered', 'list'],
     icon: 'BulletList',
     command: ({ editor, range }) => {
-      editor
-        .chain()
-        .focus()
-        .deleteRange(range)
-        .toggleBulletList()
-        .run();
+      // Delete the slash command range first
+      editor.chain().focus().deleteRange(range).run();
+      // Toggle bullet list in a separate transaction to ensure cursor positioning
+      editor.chain().focus().toggleBulletList().scrollIntoView().run();
     },
   },
   {
@@ -84,12 +82,10 @@ export const slashCommandItems: SlashCommandItem[] = [
     searchTerms: ['number', 'ol', 'ordered', 'list', '1', '2', '3'],
     icon: 'NumberedList',
     command: ({ editor, range }) => {
-      editor
-        .chain()
-        .focus()
-        .deleteRange(range)
-        .toggleOrderedList()
-        .run();
+      // Delete the slash command range first
+      editor.chain().focus().deleteRange(range).run();
+      // Toggle ordered list in a separate transaction to ensure cursor positioning
+      editor.chain().focus().toggleOrderedList().scrollIntoView().run();
     },
   },
   {
@@ -98,12 +94,10 @@ export const slashCommandItems: SlashCommandItem[] = [
     searchTerms: ['todo', 'task', 'check', 'checkbox', 'list'],
     icon: 'TaskList',
     command: ({ editor, range }) => {
-      editor
-        .chain()
-        .focus()
-        .deleteRange(range)
-        .toggleTaskList()
-        .run();
+      // Delete the slash command range first
+      editor.chain().focus().deleteRange(range).run();
+      // Toggle task list in a separate transaction to ensure cursor positioning
+      editor.chain().focus().toggleTaskList().scrollIntoView().run();
     },
   },
   {

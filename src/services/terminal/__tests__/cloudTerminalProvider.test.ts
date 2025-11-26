@@ -56,4 +56,18 @@ describe('CloudTerminalProvider', () => {
     await provider.resize('sess', 80, 24);
     expect(terminalService.resize).toHaveBeenCalledWith('sess', 80, 24);
   });
+
+  it('destroys session', async () => {
+    await provider.destroySession('test-session');
+    expect(terminalService.destroySession).toHaveBeenCalledWith('test-session');
+  });
+
+  it('connects stream', () => {
+    const mockEventSource = {} as EventSource;
+    vi.mocked(terminalService.connectStream).mockReturnValue(mockEventSource);
+    const result = provider.connectStream('test-session');
+    expect(result).toBe(mockEventSource);
+    expect(terminalService.connectStream).toHaveBeenCalledWith('test-session');
+  });
+
 });

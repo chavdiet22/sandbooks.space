@@ -3,6 +3,7 @@
 import { nanoid } from 'nanoid';
 import type { Folder, FolderTreeNode, FolderWithPath } from '../types/folder.types';
 import type { Note } from '../types';
+import { toTimestampMs } from './dateUtils';
 
 // Maximum folder depth to prevent runaway recursion
 export const MAX_FOLDER_DEPTH = 20;
@@ -358,15 +359,24 @@ export function loadFoldersFromStorage(): Folder[] {
     const folders = JSON.parse(stored) as Folder[];
     if (!Array.isArray(folders)) return [];
 
-    // Deduplicate by ID (keep first occurrence)
+    // Deduplicate by ID and validate structure
     const seen = new Set<string>();
-    const deduped = folders.filter((f) => {
-      if (seen.has(f.id)) return false;
-      seen.add(f.id);
-      return true;
-    });
+    const validated = folders
+      .filter((f) => {
+        // Skip invalid or duplicate entries
+        if (!f || typeof f.id !== 'string') return false;
+        if (seen.has(f.id)) return false;
+        seen.add(f.id);
+        return true;
+      })
+      .map((f) => ({
+        ...f,
+        // Normalize timestamps to ensure they're valid numbers
+        createdAt: toTimestampMs(f.createdAt),
+        updatedAt: toTimestampMs(f.updatedAt),
+      }));
 
-    return repairOrphanedFolders(deduped);
+    return repairOrphanedFolders(validated);
   } catch (error) {
     console.error('Failed to load folders from storage:', error);
     return [];
