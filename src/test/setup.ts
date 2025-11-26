@@ -40,12 +40,13 @@ afterAll(() => {
 const originalError = console.error;
 const originalWarn = console.warn;
 const originalLog = console.log;
-const originalDebug = console.debug;
 
 // Suppress expected error logs from error handling paths
+// These are legitimate - we're testing error handlers, not hiding bugs
 console.error = vi.fn((...args) => {
   const message = String(args[0] || '');
   const expectedErrors = [
+    // Error handler tests
     'Failed to save note',
     'Failed to update note',
     'Failed to delete note',
@@ -57,28 +58,29 @@ console.error = vi.fn((...args) => {
     'Failed to connect to local folder',
     'Failed to restore offline queue',
     'Service Worker registration error',
-    '[TerminalService]',
-    '[Terminal]',
-    'Typewriter mode scroll error',
+    // Terminal SSE errors are expected in tests (mocked connections)
+    '[TerminalService] SSE connection error',
   ];
 
   if (expectedErrors.some(err => message.includes(err))) {
-    // Suppress expected errors
     return;
   }
-  // Log unexpected errors
   originalError(...args);
 });
 
 // Suppress expected warnings
 console.warn = vi.fn((...args) => {
   const message = String(args[0] || '');
-  if (message.includes('not found for queued execution') ||
-      message.includes('not configured to support act') ||
-      message.includes('The current testing environment is not configured to support act') ||
-      message.includes('No quirks-mode-compatible') ||
-      message.includes('KaTeX') ||
-      message.includes('[ContentSanitizer]')) {
+  if (
+    // Queue test edge case
+    message.includes('not found for queued execution') ||
+    // Happy-dom limitation with React act() - properly handled with waitFor/act
+    message.includes('not configured to support act') ||
+    message.includes('The current testing environment is not configured to support act') ||
+    // KaTeX library warnings - can't fix, happy-dom doesn't fully emulate browser
+    message.includes('No quirks-mode-compatible') ||
+    message.includes('KaTeX')
+  ) {
     return;
   }
   originalWarn(...args);
@@ -89,31 +91,20 @@ if (typeof process !== 'undefined' && process.stderr) {
   const originalStderrWrite = process.stderr.write.bind(process.stderr);
   process.stderr.write = function(chunk: string | Uint8Array, ...args: unknown[]) {
     if (typeof chunk === 'string' && chunk.includes('not configured to support act')) {
-      return true; // Suppress the warning
+      return true;
     }
     return originalStderrWrite(chunk, ...args);
   };
 }
 
-// Suppress PWA and TerminalService debug logs
+// Suppress expected debug logs
 console.log = vi.fn((...args) => {
   const message = String(args[0] || '');
-  if (message.includes('[PWA]') ||
-      message.includes('[TerminalService]') ||
-      message.includes('[Terminal]') ||
-      message.includes('Typewriter mode scroll error')) {
+  // PWA service worker logs during tests
+  if (message.includes('[PWA]')) {
     return;
   }
   originalLog(...args);
-});
-
-// Suppress debug logs
-console.debug = vi.fn((...args) => {
-  const message = String(args[0] || '');
-  if (message.includes('Typewriter mode scroll error')) {
-    return;
-  }
-  originalDebug(...args);
 });
 
 // Mock localStorage

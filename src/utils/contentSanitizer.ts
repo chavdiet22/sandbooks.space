@@ -59,8 +59,8 @@ export function isValidNode(node: unknown): node is JSONContent {
  */
 export function sanitizeContent(content: JSONContent, depth: number = 0): JSONContent {
   // Prevent infinite recursion from circular references or deeply nested content
+  // Silent fallback - users won't hit this with real content (100+ depth required)
   if (depth > MAX_SANITIZE_DEPTH) {
-    console.warn('[ContentSanitizer] Max depth exceeded, returning empty paragraph');
     return { type: 'paragraph' };
   }
 

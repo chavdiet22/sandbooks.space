@@ -153,7 +153,9 @@ describe('auth.middleware', () => {
 
       expect(statusSpy).toHaveBeenCalledWith(401);
       expect(jsonSpy).toHaveBeenCalledWith({
-        error: 'Unauthorized: invalid or missing API token',
+        error: 'Invalid API token',
+        message: 'The provided API token is not valid. Check your configuration.',
+        code: 'INVALID_TOKEN',
       });
       expect(mockNext).not.toHaveBeenCalled();
     });
@@ -278,7 +280,7 @@ describe('auth.middleware', () => {
       expect(mockNext).toHaveBeenCalledWith();
     });
 
-    it('falls back to x-sandbooks-token if Bearer not valid', () => {
+    it('rejects non-Bearer auth format even with valid x-sandbooks-token', () => {
       env.API_ACCESS_TOKEN = 'secret-token';
       mockReq.headers = {
         authorization: 'Basic wrong-format',
@@ -287,7 +289,13 @@ describe('auth.middleware', () => {
 
       authGuard(mockReq as Request, mockRes as Response, mockNext);
 
-      expect(mockNext).toHaveBeenCalledWith();
+      expect(statusSpy).toHaveBeenCalledWith(401);
+      expect(jsonSpy).toHaveBeenCalledWith({
+        error: 'Invalid authorization format',
+        message: 'Authorization header must use Bearer scheme: "Bearer <token>"',
+        code: 'INVALID_AUTH_FORMAT',
+      });
+      expect(mockNext).not.toHaveBeenCalled();
     });
 
     it('falls back to query token if headers not valid', () => {
@@ -313,7 +321,9 @@ describe('auth.middleware', () => {
 
       expect(statusSpy).toHaveBeenCalledWith(401);
       expect(jsonSpy).toHaveBeenCalledWith({
-        error: 'Unauthorized: invalid or missing API token',
+        error: 'Authentication required',
+        message: 'API token is required. Provide via Authorization header (Bearer <token>), x-sandbooks-token header, or token query parameter.',
+        code: 'MISSING_TOKEN',
       });
       expect(mockNext).not.toHaveBeenCalled();
     });
@@ -362,6 +372,11 @@ describe('auth.middleware', () => {
       authGuard(mockReq as Request, mockRes as Response, mockNext);
 
       expect(statusSpy).toHaveBeenCalledWith(401);
+      expect(jsonSpy).toHaveBeenCalledWith({
+        error: 'Invalid authorization format',
+        message: 'Authorization header must use Bearer scheme: "Bearer <token>"',
+        code: 'INVALID_AUTH_FORMAT',
+      });
     });
 
     it('is case-sensitive for token value', () => {

@@ -29,7 +29,7 @@ export const useTypewriterMode = (editor: Editor | null, enabled: boolean) => {
   const scrollAnimationFrameRef = useRef<number | null>(null);
 
   const scrollToCursor = useCallback(() => {
-    if (!editor || !enabled) return;
+    if (!editor || !enabled || editor.isDestroyed) return;
 
     // Throttle scroll updates to prevent excessive scrolling
     const now = Date.now();
@@ -117,9 +117,8 @@ export const useTypewriterMode = (editor: Editor | null, enabled: boolean) => {
             behavior: 'smooth',
           });
         }
-      } catch (error) {
-        // Silently fail if there's an error (e.g., editor was destroyed)
-        console.debug('Typewriter mode scroll error:', error);
+      } catch {
+        // Silently handle - typewriter is non-critical UX enhancement
       }
     });
   }, [editor, enabled]);

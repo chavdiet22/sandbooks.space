@@ -133,20 +133,13 @@ class TerminalService {
    * - 'ping': Heartbeat to keep connection alive
    */
   connectStream(sessionId: string): EventSource {
-    console.log('[TerminalService] connectStream called with sessionId:', sessionId);
     const tokenParam = API_TOKEN ? `?token=${encodeURIComponent(API_TOKEN)}` : '';
     const url = `${API_BASE_URL}/api/terminal/${sessionId}/stream${tokenParam}`;
-    console.log('[TerminalService] Creating EventSource with URL:', url);
     const eventSource = new EventSource(url);
-    console.log('[TerminalService] EventSource created, readyState:', eventSource.readyState);
 
-    // Log connection errors for debugging
-    eventSource.onerror = (error) => {
-      console.error('[TerminalService] SSE connection error:', error, 'readyState:', eventSource.readyState);
-    };
-
-    eventSource.onopen = () => {
-      console.log('[TerminalService] SSE connection opened successfully');
+    // Only log errors, not routine connection events
+    eventSource.onerror = () => {
+      console.error('[TerminalService] SSE connection error, readyState:', eventSource.readyState);
     };
 
     return eventSource;
